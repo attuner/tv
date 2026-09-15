@@ -788,17 +788,21 @@
         };
 
         xhr.onload = () => {
-          if (xhr.status === 200 || xhr.status === 201) {
-            try {
-              const res = JSON.parse(xhr.responseText);
-              resolve(res);
-            } catch (e) {
-              resolve({ id: "" });
-            }
-          } else {
-            reject(new Error("Drive HTTP " + xhr.status + ": " + xhr.responseText));
-          }
-        };
+  if (xhr.status === 200 || xhr.status === 201) {
+    try {
+      const res = JSON.parse(xhr.responseText);
+      if (!res.id) {
+        reject(new Error("Drive completed upload but returned no File ID: " + xhr.responseText));
+        return;
+      }
+      resolve(res);
+    } catch (e) {
+      reject(new Error("Failed to parse Drive completion response: " + xhr.responseText));
+    }
+  } else {
+    reject(new Error("Drive upload error (" + xhr.status + "): " + xhr.responseText));
+  }
+};
 
         xhr.onerror = () => reject(new Error("Network error during direct Drive upload."));
         xhr.send(fileBlob);
