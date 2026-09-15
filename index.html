@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Pulse TV Studio">
-  <meta name="theme-color" content="#090A0F">
+  <meta name="theme-color" content="#07080C">
   <meta name="mobile-web-app-capable" content="yes">
 
   <style>
@@ -161,7 +161,6 @@
       font-size: 0.8rem; font-family: var(--font-mono);
     }
 
-    /* 16:9 Studio Monitor Viewport */
     .studio-monitor-wrap {
       width: 100%;
       aspect-ratio: 16 / 9;
@@ -207,7 +206,7 @@
 
     .source-selection-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 12px;
       margin-bottom: 20px;
     }
@@ -249,7 +248,7 @@
       </div>
       <div class="status-badge">
         <span class="beacon"></span>
-        <span id="systemState">BROADCASTER READY</span>
+        <span id="systemState">STUDIO READY</span>
       </div>
     </header>
 
@@ -292,26 +291,27 @@
       <div class="user-banner">
         <div class="user-info">
           <h3 id="profileName">Broadcaster</h3>
-          <p id="profileMeta">@channel - Lifetime Live Shows: 0</p>
+          <p id="profileMeta">@channel - Verified Studio Operator</p>
         </div>
         <button class="logout-btn" onclick="logout()">LOG OUT</button>
       </div>
 
       <div class="capacity-banner">
         <span>TRANSMISSION STORAGE: 50 SHOWS MAX</span>
-        <span style="color:var(--accent-tv);">FIFO ROTATION ACTIVE</span>
+        <span style="color:var(--accent-tv);">MAX 256 MB / SHOW</span>
       </div>
 
       <div class="tabs" role="tablist">
         <button id="tabCameraBtn" class="tab-btn active" role="tab" aria-selected="true" onclick="switchStudioTab('camera')">LIVE CAMERA / SCREEN RECORDER</button>
-        <button id="tabFileBtn" class="tab-btn" role="tab" aria-selected="false" onclick="switchStudioTab('file')">VIDEO MASTER INGEST</button>
+        <button id="tabFileBtn" class="tab-btn" role="tab" aria-selected="false" onclick="switchStudioTab('file')">VIDEO MASTER INGEST (256 MB)</button>
       </div>
 
-      <!-- TV CAMERA & SCREEN STUDIO -->
+      <!-- TV CAMERA & SCREEN MIXER STUDIO -->
       <div id="cameraConsole">
         <div class="source-selection-grid">
-          <button class="btn btn-secondary" onclick="initializeCameraCapture()">🎥 WEBCAM + MIC</button>
-          <button class="btn btn-secondary" onclick="initializeScreenCapture()">🖥️ SCREEN SHARE + MIC</button>
+          <button class="btn btn-secondary" onclick="initializeCameraCapture('user')">🤳 FRONT CAM</button>
+          <button class="btn btn-secondary" onclick="initializeCameraCapture('environment')">📷 BACK CAM</button>
+          <button class="btn btn-secondary" onclick="initializeScreenAndMicCapture()">🖥️ SCREEN + MIC MIX</button>
         </div>
 
         <div class="studio-monitor-wrap">
@@ -335,7 +335,7 @@
             <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
           </svg>
           <p style="font-weight:700;margin-bottom:4px;">Drag & Drop Video Episode</p>
-          <p style="font-size:0.75rem;color:var(--text-muted);">Accepts MP4, WEBM, MOV (Max 45MB)</p>
+          <p style="font-size:0.75rem;color:var(--text-muted);">Accepts MP4, WEBM, MOV, AVI (Max 256 MB)</p>
           <input type="file" id="videoFileInput" accept="video/*" style="display:none" onchange="handleVideoFileSelect(event)">
         </div>
       </div>
@@ -351,7 +351,7 @@
 
         <div class="form-group" style="margin-top: 16px;">
           <label for="trackTitle">Episode / Broadcast Title</label>
-          <input type="text" id="trackTitle" placeholder="e.g. Nightly Tech Talk: Future of Computing" maxlength="80">
+          <input type="text" id="trackTitle" placeholder="e.g. Live Discussion: Architecture of Global Networks" maxlength="80">
         </div>
 
         <button id="publishBtn" class="btn btn-primary" onclick="initiateVideoUploadPipeline()" disabled>
@@ -372,7 +372,7 @@
 
     <div style="text-align: center;">
       <a href="tv.html" class="link-tv" target="_blank">
-        <span>Switch to Live TV Receiver</span>
+        <span>Go to Live TV Station</span>
         <svg style="width:18px;height:18px;fill:currentColor" viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
       </a>
     </div>
@@ -380,11 +380,12 @@
 
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
-    const MAX_FILE_SIZE = 45 * 1024 * 1024; // 45MB Video Cap
+    const MAX_FILE_SIZE = 256 * 1024 * 1024; // 256 MB Limit
 
     let currentAuthMode = "login";
     let currentUserSession = null;
     let videoMediaStream = null;
+    let audioContext = null;
     let mediaRecorder = null;
     let recordedChunks = [];
     let recTimerId = null;
@@ -392,6 +393,7 @@
     let processedBlob = null;
     let processedDuration = 0;
     let activePreviewBlobUrl = null;
+    let activeFacingMode = "user";
 
     window.addEventListener("DOMContentLoaded", () => {
       checkStoredSession();
@@ -529,7 +531,7 @@
       document.getElementById("studioPanel").style.display = "block";
       document.getElementById("profileName").textContent = currentUserSession.fullName;
       document.getElementById("profileMeta").textContent = `@${currentUserSession.username} - Verified Broadcaster`;
-      initializeCameraCapture();
+      initializeCameraCapture('user');
     }
 
     function logout() {
@@ -558,37 +560,100 @@
         videoMediaStream.getTracks().forEach(t => t.stop());
         videoMediaStream = null;
       }
-    }
-
-    async function initializeCameraCapture() {
-      teardownMediaTracks();
-      try {
-        videoMediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
-          audio: { echoCancellation: true, noiseSuppression: true }
-        });
-        const preview = document.getElementById("studioLivePreview");
-        preview.srcObject = videoMediaStream;
-        document.getElementById("startRecBtn").disabled = false;
-      } catch (err) {
-        showAlert("Camera access denied or unavailable: " + err.message);
+      if (audioContext) {
+        audioContext.close().catch(() => {});
+        audioContext = null;
       }
     }
 
-    async function initializeScreenCapture() {
+    /**
+     * Camera Ingestion with Front/Back Toggle Support
+     */
+    async function initializeCameraCapture(facingMode) {
       teardownMediaTracks();
-      try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-        const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      activeFacingMode = facingMode;
+      const constraints = {
+        video: {
+          facingMode: facingMode === "environment" ? { exact: "environment" } : "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      };
 
-        const tracks = [...screenStream.getVideoTracks(), ...micStream.getAudioTracks()];
-        videoMediaStream = new MediaStream(tracks);
+      try {
+        videoMediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        // Fallback to relaxed constraints if exact environment camera is unsupported
+        try {
+          videoMediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facingMode },
+            audio: true
+          });
+        } catch (fallbackErr) {
+          showAlert("Camera access failed: " + fallbackErr.message);
+          return;
+        }
+      }
+
+      const preview = document.getElementById("studioLivePreview");
+      preview.srcObject = videoMediaStream;
+      document.getElementById("startRecBtn").disabled = false;
+    }
+
+    /**
+     * Fixed Screen + Hardware Mic Audio Mixing Pipeline
+     */
+    async function initializeScreenAndMicCapture() {
+      teardownMediaTracks();
+
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: { ideal: 30 } },
+          audio: true // System Audio
+        });
+
+        let micStream = null;
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+        } catch (e) {
+          console.warn("Microphone not available, using screen stream only.");
+        }
+
+        // Web Audio AudioContext Mixer
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContextClass();
+        const destination = audioContext.createMediaStreamDestination();
+
+        if (screenStream.getAudioTracks().length > 0) {
+          const screenSource = audioContext.createMediaStreamSource(new MediaStream(screenStream.getAudioTracks()));
+          screenSource.connect(destination);
+        }
+
+        if (micStream && micStream.getAudioTracks().length > 0) {
+          const micSource = audioContext.createMediaStreamSource(micStream);
+          micSource.connect(destination);
+        }
+
+        const combinedAudioTracks = destination.stream.getAudioTracks();
+        const finalTracks = [...screenStream.getVideoTracks(), ...combinedAudioTracks];
+        videoMediaStream = new MediaStream(finalTracks);
+
+        // Auto-stop recording if user ends sharing from native OS UI
+        screenStream.getVideoTracks()[0].addEventListener("ended", () => {
+          if (mediaRecorder && mediaRecorder.state === "recording") {
+            stopVideoRecording();
+          }
+        });
 
         const preview = document.getElementById("studioLivePreview");
         preview.srcObject = videoMediaStream;
         document.getElementById("startRecBtn").disabled = false;
       } catch (err) {
-        showAlert("Screen capture cancelled or unavailable.");
+        showAlert("Screen capture cancelled or unavailable: " + err.message);
       }
     }
 
@@ -601,7 +666,7 @@
       }
 
       recordedChunks = [];
-      mediaRecorder = new MediaRecorder(videoMediaStream, { mimeType, videoBitsPerSecond: 1500000 });
+      mediaRecorder = new MediaRecorder(videoMediaStream, { mimeType, videoBitsPerSecond: 2500000 });
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) recordedChunks.push(e.data);
@@ -666,11 +731,11 @@
 
     function processSelectedVideoFile(file) {
       if (!file.type.startsWith("video/") && !file.name.match(/\.(mp4|webm|mov|avi)$/i)) {
-        showAlert("Unsupported video file format.");
+        showAlert("Unsupported video format.");
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        showAlert("File exceeds the strict 45MB TV buffer limit.");
+        showAlert("File exceeds 256 MB buffer limit.");
         return;
       }
 
@@ -692,7 +757,7 @@
       let binary = "";
       const bytes = new Uint8Array(buffer);
       const len = bytes.byteLength;
-      const chunkSize = 8192;
+      const chunkSize = 16384;
       for (let i = 0; i < len; i += chunkSize) {
         binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
       }
@@ -723,13 +788,13 @@
       }
 
       try {
-        setProgress("Stage 1/4: Reading video buffer...", 20);
+        setProgress("Stage 1/4: Reading binary buffer (256 MB max)...", 20);
         const arrayBuffer = await processedBlob.arrayBuffer();
 
-        setProgress("Stage 2/4: Chunk-encoding video stream...", 45);
+        setProgress("Stage 2/4: Chunk-encoding Base64 video stream...", 45);
         const base64Data = arrayBufferToBase64(arrayBuffer);
 
-        setProgress("Stage 3/4: Uploading show to cloud...", 70);
+        setProgress("Stage 3/4: Uploading video payload to TV buffer...", 70);
         const payload = {
           action: "uploadVideoBroadcast",
           auth: {
@@ -746,13 +811,13 @@
           fileData: base64Data
         };
 
-        setProgress("Stage 4/4: Synchronizing TV rotation...", 90);
+        setProgress("Stage 4/4: Executing FIFO rotation...", 90);
         const response = await executeGasRequest(payload);
 
         if (response.success) {
           setProgress("Show Airing on Live TV Buffer!", 100);
           showAlert("Broadcast successfully transmitted to live viewers!", false);
-          setTimeout(() => { location.reload(); }, 2000);
+          setTimeout(() => { location.reload(); }, 1500);
         } else {
           showAlert(response.error || "Upload failed on TV server.");
           publishBtn.disabled = false;
@@ -779,7 +844,7 @@
           }
 
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 60000);
+          const timeoutId = setTimeout(() => controller.abort(), 90000);
           options.signal = controller.signal;
 
           const res = await fetch(url, options);

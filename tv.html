@@ -70,7 +70,6 @@
       font-weight: 600; letter-spacing: 0.5px;
     }
 
-    /* 16:9 Cinema TV Monitor */
     .tv-bezel {
       width: 100%;
       aspect-ratio: 16 / 9;
@@ -86,6 +85,14 @@
       justify-content: center;
     }
 
+    .tv-bezel:fullscreen, .tv-bezel:-webkit-full-screen {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: none;
+      margin: 0;
+    }
+
     .tv-video {
       width: 100%;
       height: 100%;
@@ -93,11 +100,10 @@
       background: #000;
     }
 
-    /* Subtle CRT Scanline overlay */
     .crt-scanlines {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
       background-size: 100% 3px, 6px 100%;
       pointer-events: none;
       z-index: 2;
@@ -125,9 +131,9 @@
     .track-time { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); }
 
     .live-progress-container { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden; margin-bottom: 24px; cursor: pointer; }
-    .live-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.25s linear; }
+    .live-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.2s linear; }
 
-    .controls { display: flex; align-items: center; justify-content: center; gap: clamp(16px, 4vw, 24px); margin-bottom: 28px; }
+    .controls { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 3vw, 24px); margin-bottom: 28px; }
     .ctrl-btn {
       background: var(--bg-card); border: 1px solid var(--border-line); color: var(--text-main);
       width: 56px; height: 56px; min-width: 48px; min-height: 48px; border-radius: 50%;
@@ -202,8 +208,7 @@
       <div class="listeners-count" id="viewerReadout">VIEWERS: 1 LIVE</div>
     </header>
 
-    <!-- LIVE TELEVISION CRT MONITOR -->
-    <div class="tv-bezel">
+    <div class="tv-bezel" id="tvBezel">
       <video id="tvVideoPlayer" class="tv-video" playsinline webkit-playsinline preload="auto" crossorigin="anonymous"></video>
       <div class="crt-scanlines"></div>
       <div class="tv-channel-watermark">PULSE // CH-01</div>
@@ -230,6 +235,11 @@
 
       <button class="ctrl-btn" onclick="channelUp()" title="Next Episode / Channel Up" aria-label="Next Episode">
         <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+      </button>
+
+      <!-- FULLSCREEN & ROTATE TO LANDSCAPE BUTTON -->
+      <button class="ctrl-btn" onclick="toggleFullscreenAndLandscape()" title="Fullscreen & Rotate Landscape" aria-label="Fullscreen">
+        <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
       </button>
     </div>
 
@@ -289,11 +299,14 @@
       const toast = document.getElementById("toastNotification");
       toast.textContent = message;
       toast.classList.add("visible");
-      setTimeout(() => { toast.classList.remove("visible"); }, 4000);
+      setTimeout(() => { toast.classList.remove("visible"); }, 3000);
     }
 
     function initVideoElementListeners() {
-      videoElement.addEventListener("ended", handleTrackEnded);
+      // 0ms Standby Transition: Immediately transition to the next video upon end
+      videoElement.addEventListener("ended", () => {
+        handleTrackEnded();
+      });
 
       videoElement.addEventListener("timeupdate", () => {
         if (!videoElement.duration || !isFinite(videoElement.duration)) return;
@@ -306,10 +319,11 @@
           `${formatTime(curSec)} / ${formatTime(durSec)}`;
       });
 
+      // 0ms Standby Transition on Error: Immediate fallback without setTimeout
       videoElement.addEventListener("error", (e) => {
         const err = videoElement.error;
         if (err && err.code === MediaError.MEDIA_ERR_ABORTED) return;
-        console.warn("Video stream error, falling back to proxy...", e);
+        console.warn("Video stream notice, immediately engaging fallback proxy...");
         if (currentQueue.length > 0 && isPlaying) {
           fallbackStreamViaProxy(currentQueue[currentTrackIndex]);
         }
@@ -350,8 +364,47 @@
           e.preventDefault(); channelUp();
         } else if (e.key === "MediaTrackPrevious" || e.keyCode === 227) {
           e.preventDefault(); channelDown();
+        } else if (e.key === "f" || e.key === "F") {
+          toggleFullscreenAndLandscape();
         }
       });
+    }
+
+    /**
+     * Fullscreen & Landscape Orientation Lock
+     */
+    async function toggleFullscreenAndLandscape() {
+      const bezel = document.getElementById("tvBezel");
+
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        try {
+          if (bezel.requestFullscreen) {
+            await bezel.requestFullscreen();
+          } else if (bezel.webkitRequestFullscreen) {
+            await bezel.webkitRequestFullscreen();
+          }
+
+          // Lock to landscape if screen orientation API is available
+          if (screen.orientation && screen.orientation.lock) {
+            try {
+              await screen.orientation.lock("landscape");
+            } catch (lockErr) {
+              console.warn("Orientation lock not permitted or unsupported on device:", lockErr);
+            }
+          }
+        } catch (err) {
+          showAlert("Fullscreen request denied: " + err.message);
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        }
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      }
     }
 
     async function fetchLiveManifest() {
@@ -415,6 +468,7 @@
       }
     }
 
+    // 0ms Standby: Immediate track handover
     function handleTrackEnded() {
       const finished = currentQueue[currentTrackIndex];
       if (finished) recordTrackToRecentlyPlayed(finished);
@@ -531,7 +585,7 @@
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           if (err.name === "AbortError") return;
-          console.warn("Direct video stream failed, falling back to proxy...", err);
+          console.warn("Direct video stream failed, immediate fallback to proxy...", err);
           fallbackStreamViaProxy(track);
         });
       }
@@ -570,8 +624,8 @@
         videoElement.play().catch(() => {});
       } catch (err) {
         if (err.name === "AbortError") return;
-        console.warn("Proxy fallback also failed:", err);
-        setTimeout(handleTrackEnded, 1500);
+        console.warn("Proxy fallback failed, immediately advancing channel:", err);
+        handleTrackEnded();
       }
     }
 
