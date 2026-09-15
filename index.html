@@ -296,8 +296,8 @@
       </div>
 
       <div class="capacity-banner">
-        <span>TRANSMISSION BUFFER: 50 EPISODES MAX</span>
-        <span style="color:var(--accent-tv);">CAPACITY: 256 MB (DIRECT RESUMABLE)</span>
+        <span>TRANSMISSION BUFFER: 50 SHOWS MAX</span>
+        <span style="color:var(--accent-tv);">CAPACITY: 256 MB (DIRECT DRIVE STREAM)</span>
       </div>
 
       <div class="tabs" role="tablist">
@@ -305,7 +305,7 @@
         <button id="tabFileBtn" class="tab-btn" role="tab" aria-selected="false" onclick="switchStudioTab('file')">MASTER VIDEO INGEST (256 MB)</button>
       </div>
 
-      <!-- CAMERA STUDIO: FRONT & BACK TOGGLES -->
+      <!-- CAMERA STUDIO: FRONT & BACK CAMERAS -->
       <div id="cameraConsole">
         <div class="source-selection-grid">
           <button id="frontCamBtn" class="btn btn-secondary" onclick="initializeCameraCapture('user')">🤳 FRONT CAMERA</button>
@@ -338,7 +338,7 @@
         </div>
       </div>
 
-      <!-- REVIEW & PROGRESS UI -->
+      <!-- AUDITION REVIEW & INSTANT DISPATCH -->
       <div id="submissionContainer" style="margin-top: 24px;">
         <div id="previewBox" class="preview-player">
           <label>Review Broadcast Take</label>
@@ -358,7 +358,7 @@
 
         <div id="uploadProgress" class="progress-box">
           <div class="progress-label">
-            <span id="stageLabel">Uploading to Google Drive: 0%</span>
+            <span id="stageLabel">Uploading: 0%</span>
             <span id="percentLabel">0%</span>
           </div>
           <div class="progress-bar-bg">
@@ -689,11 +689,11 @@
     }
 
     /**
-     * Direct Resumable Upload Pipeline: Fast Raw Binary Upload with Real-Time Percentage
+     * Resilient Direct Upload Engine with Fixed XHR Resolution (Prevents 95% freeze)
      */
     async function initiateDirectDriveUploadPipeline() {
       if (!processedBlob) {
-        showAlert("No video take or file selected.");
+        showAlert("No video file selected or recorded.");
         return;
       }
 
@@ -716,7 +716,7 @@
       }
 
       try {
-        setProgressUI("Requesting Direct Drive Session...", 3);
+        setProgressUI("Requesting Resumable Session...", 3);
 
         const initResp = await executeGasRequest({
           action: "initDirectUpload",
@@ -733,10 +733,9 @@
         }
 
         const uploadUrl = initResp.data.uploadUrl;
-        const oauthToken = initResp.data.oauthToken;
 
-        // Perform fast raw binary upload directly to Google Drive servers
-        const driveFile = await uploadFileDirectlyToDrive(uploadUrl, oauthToken, processedBlob, (pct) => {
+        // Perform fast raw binary upload directly to Google Drive
+        const driveFile = await uploadFileDirectlyToDrive(uploadUrl, processedBlob, (pct) => {
           setProgressUI(`Uploading to Google Drive: ${Math.round(pct)}%`, 5 + (pct * 0.90));
         });
 
@@ -763,7 +762,7 @@
           showAlert("Episode successfully uploaded and live!", false);
           setTimeout(() => { location.reload(); }, 1200);
         } else {
-          throw new Error(regResp.error || "Failed to register broadcast in TV database.");
+          throw new Error(regResp.error || "Failed to register broadcast in database.");
         }
       } catch (err) {
         showAlert("Upload Failure: " + err.message);
@@ -771,14 +770,14 @@
       }
     }
 
-    function uploadFileDirectlyToDrive(uploadUrl, token, fileBlob, onProgress) {
+    /**
+     * Strict JSON Response Parser ensuring File ID validity
+     */
+    function uploadFileDirectlyToDrive(uploadUrl, fileBlob, onProgress) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", uploadUrl, true);
         xhr.setRequestHeader("Content-Type", fileBlob.type || "video/mp4");
-        if (token) {
-          xhr.setRequestHeader("Authorization", "Bearer " + token);
-        }
 
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
@@ -788,23 +787,23 @@
         };
 
         xhr.onload = () => {
-  if (xhr.status === 200 || xhr.status === 201) {
-    try {
-      const res = JSON.parse(xhr.responseText);
-      if (!res.id) {
-        reject(new Error("Drive completed upload but returned no File ID: " + xhr.responseText));
-        return;
-      }
-      resolve(res);
-    } catch (e) {
-      reject(new Error("Failed to parse Drive completion response: " + xhr.responseText));
-    }
-  } else {
-    reject(new Error("Drive upload error (" + xhr.status + "): " + xhr.responseText));
-  }
-};
+          if (xhr.status === 200 || xhr.status === 201) {
+            try {
+              const res = JSON.parse(xhr.responseText);
+              if (!res.id) {
+                reject(new Error("Drive completed upload but returned no File ID: " + xhr.responseText));
+                return;
+              }
+              resolve(res);
+            } catch (e) {
+              reject(new Error("Failed to parse Drive completion response: " + xhr.responseText));
+            }
+          } else {
+            reject(new Error("Drive upload error (" + xhr.status + "): " + xhr.responseText));
+          }
+        };
 
-        xhr.onerror = () => reject(new Error("Network error during direct Drive upload."));
+        xhr.onerror = () => reject(new Error("Network error during direct Drive transfer."));
         xhr.send(fileBlob);
       });
     }
