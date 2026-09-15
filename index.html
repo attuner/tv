@@ -220,7 +220,7 @@
     .progress-box { margin-top: 20px; display: none; }
     .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 8px; font-weight: 700; color: var(--accent-tv); }
     .progress-bar-bg { height: 12px; background: rgba(0, 0, 0, 0.6); border-radius: 6px; overflow: hidden; border: 1px solid var(--panel-border); }
-    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.1s linear; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.15s ease-out; }
 
     .preview-player { width: 100%; margin: 20px 0; display: none; }
 
@@ -689,11 +689,11 @@
     }
 
     /**
-     * Resilient Direct Upload Engine with Fixed XHR Resolution (Prevents 95% freeze)
+     * Resilient Direct Upload Pipeline: Fast Raw Binary Upload with Real-Time Percentage
      */
     async function initiateDirectDriveUploadPipeline() {
       if (!processedBlob) {
-        showAlert("No video file selected or recorded.");
+        showAlert("No video take or file selected.");
         return;
       }
 
@@ -733,11 +733,16 @@
         }
 
         const uploadUrl = initResp.data.uploadUrl;
+        const oauthToken = initResp.data.oauthToken;
 
         // Perform fast raw binary upload directly to Google Drive
-        const driveFile = await uploadFileDirectlyToDrive(uploadUrl, processedBlob, (pct) => {
+        const driveFile = await uploadFileDirectlyToDrive(uploadUrl, oauthToken, processedBlob, (pct) => {
           setProgressUI(`Uploading to Google Drive: ${Math.round(pct)}%`, 5 + (pct * 0.90));
         });
+
+        if (!driveFile || !driveFile.id) {
+          throw new Error("Drive upload succeeded but did not return a valid File ID.");
+        }
 
         setProgressUI("Registering Live Broadcast...", 97);
 
@@ -765,19 +770,24 @@
           throw new Error(regResp.error || "Failed to register broadcast in database.");
         }
       } catch (err) {
+        console.error("Upload Error:", err);
         showAlert("Upload Failure: " + err.message);
         publishBtn.disabled = false;
       }
     }
 
     /**
-     * Strict JSON Response Parser ensuring File ID validity
+     * Authorized Binary Upload Directly to Google Drive Resumable URI
      */
-    function uploadFileDirectlyToDrive(uploadUrl, fileBlob, onProgress) {
+    function uploadFileDirectlyToDrive(uploadUrl, oauthToken, fileBlob, onProgress) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", uploadUrl, true);
         xhr.setRequestHeader("Content-Type", fileBlob.type || "video/mp4");
+
+        if (oauthToken) {
+          xhr.setRequestHeader("Authorization", "Bearer " + oauthToken);
+        }
 
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
@@ -791,7 +801,7 @@
             try {
               const res = JSON.parse(xhr.responseText);
               if (!res.id) {
-                reject(new Error("Drive completed upload but returned no File ID: " + xhr.responseText));
+                reject(new Error("Drive response missing file ID: " + xhr.responseText));
                 return;
               }
               resolve(res);
@@ -799,7 +809,7 @@
               reject(new Error("Failed to parse Drive completion response: " + xhr.responseText));
             }
           } else {
-            reject(new Error("Drive upload error (" + xhr.status + "): " + xhr.responseText));
+            reject(new Error("Drive upload rejected (" + xhr.status + "): " + xhr.responseText));
           }
         };
 
