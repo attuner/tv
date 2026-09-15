@@ -135,7 +135,6 @@
 
     .btn-primary { background: linear-gradient(135deg, var(--accent-tv), #FF6600); color: #FFF; }
     .btn-primary:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 0 16px rgba(255, 51, 102, 0.4); }
-    .btn-cyan { background: linear-gradient(135deg, var(--accent-cyan), #0088FF); color: #000; }
     .btn-danger { background: #FF3B30; color: #FFF; }
     .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid var(--panel-border); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
@@ -219,9 +218,9 @@
     .dropzone:hover, .dropzone.dragover { border-color: var(--accent-tv); background: var(--accent-glow); }
 
     .progress-box { margin-top: 20px; display: none; }
-    .progress-label { display: flex; justify-content: space-between; font-size: 0.8rem; font-family: var(--font-mono); margin-bottom: 8px; }
-    .progress-bar-bg { height: 8px; background: rgba(0, 0, 0, 0.6); border-radius: 4px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.3s; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 8px; font-weight: 700; color: var(--accent-tv); }
+    .progress-bar-bg { height: 10px; background: rgba(0, 0, 0, 0.6); border-radius: 5px; overflow: hidden; border: 1px solid var(--panel-border); }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.15s ease-out; }
 
     .preview-player { width: 100%; margin: 20px 0; display: none; }
 
@@ -297,21 +296,20 @@
       </div>
 
       <div class="capacity-banner">
-        <span>TRANSMISSION STORAGE: 50 SHOWS MAX</span>
-        <span style="color:var(--accent-tv);">MAX 256 MB / SHOW</span>
+        <span>TRANSMISSION BUFFER: 50 EPISODES MAX</span>
+        <span style="color:var(--accent-tv);">LIMIT: 256 MB (PERCENT TRACKING)</span>
       </div>
 
       <div class="tabs" role="tablist">
-        <button id="tabCameraBtn" class="tab-btn active" role="tab" aria-selected="true" onclick="switchStudioTab('camera')">LIVE CAMERA / SCREEN RECORDER</button>
+        <button id="tabCameraBtn" class="tab-btn active" role="tab" aria-selected="true" onclick="switchStudioTab('camera')">LIVE CAMERA STUDIO</button>
         <button id="tabFileBtn" class="tab-btn" role="tab" aria-selected="false" onclick="switchStudioTab('file')">VIDEO MASTER INGEST (256 MB)</button>
       </div>
 
-      <!-- TV CAMERA & SCREEN MIXER STUDIO -->
+      <!-- TV CAMERA STUDIO -->
       <div id="cameraConsole">
         <div class="source-selection-grid">
-          <button class="btn btn-secondary" onclick="initializeCameraCapture('user')">🤳 FRONT CAM</button>
-          <button class="btn btn-secondary" onclick="initializeCameraCapture('environment')">📷 BACK CAM</button>
-          <button class="btn btn-secondary" onclick="initializeScreenAndMicCapture()">🖥️ SCREEN + MIC MIX</button>
+          <button class="btn btn-secondary" onclick="initializeCameraCapture('user')">🤳 FRONT CAMERA</button>
+          <button class="btn btn-secondary" onclick="initializeCameraCapture('environment')">📷 BACK CAMERA</button>
         </div>
 
         <div class="studio-monitor-wrap">
@@ -340,7 +338,7 @@
         </div>
       </div>
 
-      <!-- REVIEW & PUBLISHING -->
+      <!-- REVIEW & PROGRESS -->
       <div id="submissionContainer" style="margin-top: 24px;">
         <div id="previewBox" class="preview-player">
           <label>Review Broadcast Take</label>
@@ -351,16 +349,16 @@
 
         <div class="form-group" style="margin-top: 16px;">
           <label for="trackTitle">Episode / Broadcast Title</label>
-          <input type="text" id="trackTitle" placeholder="e.g. Live Discussion: Architecture of Global Networks" maxlength="80">
+          <input type="text" id="trackTitle" placeholder="e.g. Live Episode: Digital Horizon" maxlength="80">
         </div>
 
-        <button id="publishBtn" class="btn btn-primary" onclick="initiateVideoUploadPipeline()" disabled>
-          <span>AIR ON LIVE TV BUFFER</span>
+        <button id="publishBtn" class="btn btn-primary" onclick="initiateResilientUploadPipeline()" disabled>
+          <span>AIR ON LIVE TV BUFFER (256 MB)</span>
         </button>
 
         <div id="uploadProgress" class="progress-box">
           <div class="progress-label">
-            <span id="stageLabel">Preparing Video Stream...</span>
+            <span id="stageLabel">Uploading Stream...</span>
             <span id="percentLabel">0%</span>
           </div>
           <div class="progress-bar-bg">
@@ -372,20 +370,20 @@
 
     <div style="text-align: center;">
       <a href="tv.html" class="link-tv" target="_blank">
-        <span>Go to Live TV Station</span>
+        <span>Go to Live TV Receiver</span>
         <svg style="width:18px;height:18px;fill:currentColor" viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
       </a>
     </div>
   </div>
 
   <script>
-    const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
-    const MAX_FILE_SIZE = 256 * 1024 * 1024; // 256 MB Limit
+    const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec  ";
+    const MAX_FILE_SIZE = 256 * 1024 * 1024; // 256 MB Strict Cap
+    const CHUNK_SIZE = 10 * 1024 * 1024;    // 10 MB per payload chunk
 
     let currentAuthMode = "login";
     let currentUserSession = null;
     let videoMediaStream = null;
-    let audioContext = null;
     let mediaRecorder = null;
     let recordedChunks = [];
     let recTimerId = null;
@@ -393,7 +391,6 @@
     let processedBlob = null;
     let processedDuration = 0;
     let activePreviewBlobUrl = null;
-    let activeFacingMode = "user";
 
     window.addEventListener("DOMContentLoaded", () => {
       checkStoredSession();
@@ -560,18 +557,10 @@
         videoMediaStream.getTracks().forEach(t => t.stop());
         videoMediaStream = null;
       }
-      if (audioContext) {
-        audioContext.close().catch(() => {});
-        audioContext = null;
-      }
     }
 
-    /**
-     * Camera Ingestion with Front/Back Toggle Support
-     */
     async function initializeCameraCapture(facingMode) {
       teardownMediaTracks();
-      activeFacingMode = facingMode;
       const constraints = {
         video: {
           facingMode: facingMode === "environment" ? { exact: "environment" } : "user",
@@ -585,7 +574,6 @@
       try {
         videoMediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (err) {
-        // Fallback to relaxed constraints if exact environment camera is unsupported
         try {
           videoMediaStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: facingMode },
@@ -600,61 +588,6 @@
       const preview = document.getElementById("studioLivePreview");
       preview.srcObject = videoMediaStream;
       document.getElementById("startRecBtn").disabled = false;
-    }
-
-    /**
-     * Fixed Screen + Hardware Mic Audio Mixing Pipeline
-     */
-    async function initializeScreenAndMicCapture() {
-      teardownMediaTracks();
-
-      try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: { ideal: 30 } },
-          audio: true // System Audio
-        });
-
-        let micStream = null;
-        try {
-          micStream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true }
-          });
-        } catch (e) {
-          console.warn("Microphone not available, using screen stream only.");
-        }
-
-        // Web Audio AudioContext Mixer
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        audioContext = new AudioContextClass();
-        const destination = audioContext.createMediaStreamDestination();
-
-        if (screenStream.getAudioTracks().length > 0) {
-          const screenSource = audioContext.createMediaStreamSource(new MediaStream(screenStream.getAudioTracks()));
-          screenSource.connect(destination);
-        }
-
-        if (micStream && micStream.getAudioTracks().length > 0) {
-          const micSource = audioContext.createMediaStreamSource(micStream);
-          micSource.connect(destination);
-        }
-
-        const combinedAudioTracks = destination.stream.getAudioTracks();
-        const finalTracks = [...screenStream.getVideoTracks(), ...combinedAudioTracks];
-        videoMediaStream = new MediaStream(finalTracks);
-
-        // Auto-stop recording if user ends sharing from native OS UI
-        screenStream.getVideoTracks()[0].addEventListener("ended", () => {
-          if (mediaRecorder && mediaRecorder.state === "recording") {
-            stopVideoRecording();
-          }
-        });
-
-        const preview = document.getElementById("studioLivePreview");
-        preview.srcObject = videoMediaStream;
-        document.getElementById("startRecBtn").disabled = false;
-      } catch (err) {
-        showAlert("Screen capture cancelled or unavailable: " + err.message);
-      }
     }
 
     function startVideoRecording() {
@@ -764,11 +697,15 @@
       return btoa(binary);
     }
 
-    async function initiateVideoUploadPipeline() {
+    /**
+     * Resilient Chunked Upload Engine with Real-Time Percentage Status
+     */
+    async function initiateResilientUploadPipeline() {
       if (!processedBlob) {
         showAlert("No video file or take available to broadcast.");
         return;
       }
+
       const titleInput = document.getElementById("trackTitle");
       const title = titleInput.value.trim() || "Live Transmission Episode";
 
@@ -781,22 +718,60 @@
       publishBtn.disabled = true;
       progressBox.style.display = "block";
 
-      function setProgress(stage, pct) {
-        stageLabel.textContent = stage;
-        percentLabel.textContent = pct + "%";
-        progressBar.style.width = pct + "%";
+      function updateStatus(label, percent) {
+        stageLabel.textContent = label;
+        percentLabel.textContent = Math.round(percent) + "%";
+        progressBar.style.width = percent + "%";
       }
 
       try {
-        setProgress("Stage 1/4: Reading binary buffer (256 MB max)...", 20);
-        const arrayBuffer = await processedBlob.arrayBuffer();
+        updateStatus("Initializing Resumable 256MB Session...", 2);
 
-        setProgress("Stage 2/4: Chunk-encoding Base64 video stream...", 45);
-        const base64Data = arrayBufferToBase64(arrayBuffer);
+        const initResp = await executeGasRequest({
+          action: "initChunkedUpload",
+          auth: {
+            username: currentUserSession.username,
+            token: currentUserSession.token
+          }
+        });
 
-        setProgress("Stage 3/4: Uploading video payload to TV buffer...", 70);
-        const payload = {
-          action: "uploadVideoBroadcast",
+        if (!initResp.success || !initResp.data.uploadSessionId) {
+          throw new Error(initResp.error || "Failed to initialize serverless upload session.");
+        }
+
+        const sessionId = initResp.data.uploadSessionId;
+        const totalBytes = processedBlob.size;
+        let offset = 0;
+        let chunkIndex = 0;
+        const totalChunks = Math.ceil(totalBytes / CHUNK_SIZE);
+
+        while (offset < totalBytes) {
+          const slice = processedBlob.slice(offset, offset + CHUNK_SIZE);
+          const sliceBuffer = await slice.arrayBuffer();
+          const base64Chunk = arrayBufferToBase64(sliceBuffer);
+
+          chunkIndex++;
+          const progressPercent = 5 + ((offset / totalBytes) * 85);
+          updateStatus(`Transmitting Chunk ${chunkIndex}/${totalChunks}...`, progressPercent);
+
+          const chunkResp = await executeGasRequest({
+            action: "sendChunk",
+            uploadSessionId: sessionId,
+            chunkData: base64Chunk
+          });
+
+          if (!chunkResp.success) {
+            throw new Error(chunkResp.error || "Transmission interrupted at chunk " + chunkIndex);
+          }
+
+          offset += CHUNK_SIZE;
+        }
+
+        updateStatus("Finalizing Live 256MB Transmission...", 94);
+
+        const finalResp = await executeGasRequest({
+          action: "finalizeChunkedUpload",
+          uploadSessionId: sessionId,
           auth: {
             username: currentUserSession.username,
             token: currentUserSession.token
@@ -807,23 +782,18 @@
             mimeType: processedBlob.type || "video/mp4",
             durationSeconds: Math.round(processedDuration),
             sizeBytes: processedBlob.size
-          },
-          fileData: base64Data
-        };
+          }
+        });
 
-        setProgress("Stage 4/4: Executing FIFO rotation...", 90);
-        const response = await executeGasRequest(payload);
-
-        if (response.success) {
-          setProgress("Show Airing on Live TV Buffer!", 100);
-          showAlert("Broadcast successfully transmitted to live viewers!", false);
+        if (finalResp.success) {
+          updateStatus("Broadcast Live On Air!", 100);
+          showAlert("Episode successfully uploaded and added to Live TV Buffer!", false);
           setTimeout(() => { location.reload(); }, 1500);
         } else {
-          showAlert(response.error || "Upload failed on TV server.");
-          publishBtn.disabled = false;
+          throw new Error(finalResp.error || "Failed to finalize broadcast on TV server.");
         }
       } catch (err) {
-        showAlert("Transmission error: " + err.message);
+        showAlert("Broadcast Ingestion Error: " + err.message);
         publishBtn.disabled = false;
       }
     }

@@ -131,7 +131,7 @@
     .track-time { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); }
 
     .live-progress-container { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden; margin-bottom: 24px; cursor: pointer; }
-    .live-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.2s linear; }
+    .live-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.15s linear; }
 
     .controls { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 3vw, 24px); margin-bottom: 28px; }
     .ctrl-btn {
@@ -237,7 +237,7 @@
         <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
       </button>
 
-      <!-- FULLSCREEN & ROTATE TO LANDSCAPE BUTTON -->
+      <!-- FULLSCREEN & ROTATE TO LANDSCAPE -->
       <button class="ctrl-btn" onclick="toggleFullscreenAndLandscape()" title="Fullscreen & Rotate Landscape" aria-label="Fullscreen">
         <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
       </button>
@@ -268,7 +268,6 @@
     let isPlaying = false;
     let currentTrackIndex = 0;
     let currentBlobUrl = null;
-    let isTrackLoading = false;
     let activeFetchAbortController = null;
     let userBaseVolume = 0.80;
     let cachedManifestEtag = null;
@@ -303,7 +302,7 @@
     }
 
     function initVideoElementListeners() {
-      // 0ms Standby Transition: Immediately transition to the next video upon end
+      // 0ms Standby Transition: Zero-delay handover
       videoElement.addEventListener("ended", () => {
         handleTrackEnded();
       });
@@ -319,11 +318,11 @@
           `${formatTime(curSec)} / ${formatTime(durSec)}`;
       });
 
-      // 0ms Standby Transition on Error: Immediate fallback without setTimeout
+      // 0ms Standby Error: Instant Proxy Recovery
       videoElement.addEventListener("error", (e) => {
         const err = videoElement.error;
         if (err && err.code === MediaError.MEDIA_ERR_ABORTED) return;
-        console.warn("Video stream notice, immediately engaging fallback proxy...");
+        console.warn("Direct stream error, executing 0ms proxy fallback...");
         if (currentQueue.length > 0 && isPlaying) {
           fallbackStreamViaProxy(currentQueue[currentTrackIndex]);
         }
@@ -341,7 +340,7 @@
 
       videoElement.addEventListener("waiting", () => {
         if (isPlaying) {
-          document.getElementById("currentTitle").textContent = "Buffering television broadcast...";
+          document.getElementById("currentTitle").textContent = "Buffering broadcast stream...";
         }
       });
     }
@@ -370,9 +369,6 @@
       });
     }
 
-    /**
-     * Fullscreen & Landscape Orientation Lock
-     */
     async function toggleFullscreenAndLandscape() {
       const bezel = document.getElementById("tvBezel");
 
@@ -384,16 +380,15 @@
             await bezel.webkitRequestFullscreen();
           }
 
-          // Lock to landscape if screen orientation API is available
           if (screen.orientation && screen.orientation.lock) {
             try {
               await screen.orientation.lock("landscape");
             } catch (lockErr) {
-              console.warn("Orientation lock not permitted or unsupported on device:", lockErr);
+              console.warn("Screen orientation lock unavailable:", lockErr);
             }
           }
         } catch (err) {
-          showAlert("Fullscreen request denied: " + err.message);
+          showToast("Fullscreen request denied: " + err.message);
         }
       } else {
         if (document.exitFullscreen) {
@@ -456,7 +451,7 @@
 
       if (newlyAdded.length > 0) {
         newlyAdded.forEach(newShow => priorityQueue.push(newShow));
-        showToast("New live show transmitted! Airing next.");
+        showToast("New show transmitted! Airing next.");
       }
 
       const activeContentId = currentQueue[currentTrackIndex]?.contentId;
@@ -468,7 +463,6 @@
       }
     }
 
-    // 0ms Standby: Immediate track handover
     function handleTrackEnded() {
       const finished = currentQueue[currentTrackIndex];
       if (finished) recordTrackToRecentlyPlayed(finished);
@@ -577,6 +571,7 @@
       }
 
       videoElement.pause();
+      // Drive direct download link
       videoElement.src = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(track.fileId)}`;
       videoElement.load();
       videoElement.volume = userBaseVolume;
@@ -585,7 +580,7 @@
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           if (err.name === "AbortError") return;
-          console.warn("Direct video stream failed, immediate fallback to proxy...", err);
+          console.warn("Direct video stream unavailable, switching immediately to proxy fallback...", err);
           fallbackStreamViaProxy(track);
         });
       }
@@ -624,8 +619,8 @@
         videoElement.play().catch(() => {});
       } catch (err) {
         if (err.name === "AbortError") return;
-        console.warn("Proxy fallback failed, immediately advancing channel:", err);
-        handleTrackEnded();
+        console.warn("Proxy fallback also failed, immediately advancing channel:", err);
+        handleTrackEnded(); // 0ms immediate handover
       }
     }
 
