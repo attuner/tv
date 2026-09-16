@@ -296,16 +296,15 @@
       </div>
 
       <div class="capacity-banner">
-        <span>TRANSMISSION BUFFER: 50 SHOWS MAX</span>
-        <span style="color:var(--accent-tv);">CAPACITY: 256 MB (DIRECT DRIVE STREAM)</span>
+        <span>TRANSMISSION BUFFER: 50 SHOWS</span>
+        <span style="color:var(--accent-tv);">CAPACITY: UP TO 256 MB</span>
       </div>
 
       <div class="tabs" role="tablist">
-        <button id="tabCameraBtn" class="tab-btn active" role="tab" aria-selected="true" onclick="switchStudioTab('camera')">LIVE CAMERA STUDIO</button>
+        <button id="tabCameraBtn" class="tab-btn active" role="tab" aria-selected="true" onclick="switchStudioTab('camera')">LIVE CAMERA RECORDER</button>
         <button id="tabFileBtn" class="tab-btn" role="tab" aria-selected="false" onclick="switchStudioTab('file')">MASTER VIDEO INGEST (256 MB)</button>
       </div>
 
-      <!-- CAMERA STUDIO: FRONT & BACK CAMERAS -->
       <div id="cameraConsole">
         <div class="source-selection-grid">
           <button id="frontCamBtn" class="btn btn-secondary" onclick="initializeCameraCapture('user')">🤳 FRONT CAMERA</button>
@@ -326,7 +325,6 @@
         </div>
       </div>
 
-      <!-- FILE UPLOAD INGEST -->
       <div id="fileConsole" style="display: none;">
         <div class="dropzone" id="dropArea" tabindex="0" role="button" aria-label="Drop video file or click to select" onclick="document.getElementById('videoFileInput').click()" onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('videoFileInput').click()">
           <svg style="width:48px;height:48px;fill:var(--text-muted);margin-bottom:12px;" viewBox="0 0 24 24">
@@ -338,7 +336,6 @@
         </div>
       </div>
 
-      <!-- AUDITION REVIEW & INSTANT DISPATCH -->
       <div id="submissionContainer" style="margin-top: 24px;">
         <div id="previewBox" class="preview-player">
           <label>Review Broadcast Take</label>
@@ -352,8 +349,8 @@
           <input type="text" id="trackTitle" placeholder="e.g. Episode 04: The Open Web Architecture" maxlength="80">
         </div>
 
-        <button id="publishBtn" class="btn btn-primary" onclick="initiateDirectDriveUploadPipeline()" disabled>
-          <span>AIR ON LIVE TV (INSTANT WIRE SPEED)</span>
+        <button id="publishBtn" class="btn btn-primary" onclick="initiateChunkedUploadPipeline()" disabled>
+          <span>AIR ON LIVE TV (RELIABLE CHUNKED STREAM)</span>
         </button>
 
         <div id="uploadProgress" class="progress-box">
@@ -379,6 +376,7 @@
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
     const MAX_FILE_SIZE = 256 * 1024 * 1024; // 256 MB Limit
+    const CHUNK_BYTE_SIZE = 3 * 1024 * 1024; // 3 MB raw binary slice (converts to safe ~4MB text payload)
 
     let currentAuthMode = "login";
     let currentUserSession = null;
@@ -390,7 +388,6 @@
     let processedBlob = null;
     let processedDuration = 0;
     let activePreviewBlobUrl = null;
-    let currentFacingMode = "user";
 
     window.addEventListener("DOMContentLoaded", () => {
       checkStoredSession();
@@ -561,7 +558,6 @@
 
     async function initializeCameraCapture(facingMode) {
       teardownMediaTracks();
-      currentFacingMode = facingMode;
 
       document.getElementById("frontCamBtn").style.borderColor = facingMode === "user" ? "var(--accent-tv)" : "var(--panel-border)";
       document.getElementById("backCamBtn").style.borderColor = facingMode === "environment" ? "var(--accent-tv)" : "var(--panel-border)";
@@ -569,8 +565,8 @@
       const constraints = {
         video: {
           facingMode: facingMode === "environment" ? { ideal: "environment" } : "user",
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
           frameRate: { ideal: 30 }
         },
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
@@ -601,7 +597,7 @@
       }
 
       recordedChunks = [];
-      mediaRecorder = new MediaRecorder(videoMediaStream, { mimeType, videoBitsPerSecond: 3000000 });
+      mediaRecorder = new MediaRecorder(videoMediaStream, { mimeType, videoBitsPerSecond: 2500000 });
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) recordedChunks.push(e.data);
@@ -670,7 +666,7 @@
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        showAlert("File exceeds the strict 256 MB buffer limit.");
+        showAlert("File exceeds the strict 256 MB limit.");
         return;
       }
 
@@ -688,12 +684,23 @@
       });
     }
 
+    function arrayBufferToBase64(buffer) {
+      let binary = "";
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      const chunkSize = 16384;
+      for (let i = 0; i < len; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
+      }
+      return btoa(binary);
+    }
+
     /**
-     * Resilient Direct Upload Pipeline: Fast Raw Binary Upload with Real-Time Percentage
+     * Chunked Upload Pipeline: Eliminates CORS blocks and handles up to 256 MB smoothly
      */
-    async function initiateDirectDriveUploadPipeline() {
+    async function initiateChunkedUploadPipeline() {
       if (!processedBlob) {
-        showAlert("No video take or file selected.");
+        showAlert("No video file selected or recorded.");
         return;
       }
 
@@ -716,106 +723,78 @@
       }
 
       try {
-        setProgressUI("Requesting Resumable Session...", 3);
+        setProgressUI("Initializing Cloud Upload Session...", 2);
 
         const initResp = await executeGasRequest({
-          action: "initDirectUpload",
-          fileName: processedBlob.name || "broadcast.mp4",
-          mimeType: processedBlob.type || "video/mp4",
+          action: "initChunkedUpload",
           auth: {
             username: currentUserSession.username,
             token: currentUserSession.token
           }
         });
 
-        if (!initResp.success || !initResp.data.uploadUrl) {
-          throw new Error(initResp.error || "Failed to acquire Google Drive upload endpoint.");
+        if (!initResp.success || !initResp.data.uploadSessionId) {
+          throw new Error(initResp.error || "Failed to initialize upload session.");
         }
 
-        const uploadUrl = initResp.data.uploadUrl;
-        const oauthToken = initResp.data.oauthToken;
+        const sessionId = initResp.data.uploadSessionId;
+        const totalBytes = processedBlob.size;
+        let offset = 0;
+        let chunkIndex = 0;
+        const totalChunks = Math.ceil(totalBytes / CHUNK_BYTE_SIZE);
 
-        // Perform fast raw binary upload directly to Google Drive
-        const driveFile = await uploadFileDirectlyToDrive(uploadUrl, oauthToken, processedBlob, (pct) => {
-          setProgressUI(`Uploading to Google Drive: ${Math.round(pct)}%`, 5 + (pct * 0.90));
-        });
+        while (offset < totalBytes) {
+          const slice = processedBlob.slice(offset, offset + CHUNK_BYTE_SIZE);
+          const sliceBuffer = await slice.arrayBuffer();
+          const base64Chunk = arrayBufferToBase64(sliceBuffer);
 
-        if (!driveFile || !driveFile.id) {
-          throw new Error("Drive upload succeeded but did not return a valid File ID.");
+          chunkIndex++;
+          const currentPercent = 5 + ((offset / totalBytes) * 88);
+          setProgressUI(`Uploading: Chunk ${chunkIndex} of ${totalChunks} (${Math.round((offset / totalBytes) * 100)}%)`, currentPercent);
+
+          const chunkResp = await executeGasRequest({
+            action: "appendChunk",
+            uploadSessionId: sessionId,
+            chunkBase64: base64Chunk
+          });
+
+          if (!chunkResp.success) {
+            throw new Error(chunkResp.error || "Upload failed at chunk " + chunkIndex);
+          }
+
+          offset += CHUNK_BYTE_SIZE;
         }
 
-        setProgressUI("Registering Live Broadcast...", 97);
+        setProgressUI("Finalizing broadcast on TV server...", 96);
 
-        const regResp = await executeGasRequest({
-          action: "registerUploadedBroadcast",
-          fileId: driveFile.id,
+        const finalResp = await executeGasRequest({
+          action: "finalizeUpload",
+          uploadSessionId: sessionId,
           auth: {
             username: currentUserSession.username,
             token: currentUserSession.token
           },
           metadata: {
             title: title,
-            fileName: driveFile.name || processedBlob.name || "broadcast.mp4",
+            fileName: processedBlob.name || "broadcast.mp4",
             mimeType: processedBlob.type || "video/mp4",
             durationSeconds: Math.round(processedDuration),
             sizeBytes: processedBlob.size
           }
         });
 
-        if (regResp.success) {
-          setProgressUI("Live Broadcast On Air!", 100);
-          showAlert("Episode successfully uploaded and live!", false);
+        if (finalResp.success) {
+          setProgressUI("Live Broadcast Airing!", 100);
+          showAlert("Episode successfully uploaded and live on air!", false);
           setTimeout(() => { location.reload(); }, 1200);
         } else {
-          throw new Error(regResp.error || "Failed to register broadcast in database.");
+          throw new Error(finalResp.error || "Failed to finalize broadcast.");
         }
       } catch (err) {
-        console.error("Upload Error:", err);
-        showAlert("Upload Failure: " + err.message);
+        console.error("Upload Failure:", err);
+        showAlert("Upload Error: " + err.message);
         publishBtn.disabled = false;
       }
-    }
-
-    /**
-     * Authorized Binary Upload Directly to Google Drive Resumable URI
-     */
-    function uploadFileDirectlyToDrive(uploadUrl, oauthToken, fileBlob, onProgress) {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("PUT", uploadUrl, true);
-        xhr.setRequestHeader("Content-Type", fileBlob.type || "video/mp4");
-
-        if (oauthToken) {
-          xhr.setRequestHeader("Authorization", "Bearer " + oauthToken);
-        }
-
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const percent = (e.loaded / e.total) * 100;
-            onProgress(percent);
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status === 200 || xhr.status === 201) {
-            try {
-              const res = JSON.parse(xhr.responseText);
-              if (!res.id) {
-                reject(new Error("Drive response missing file ID: " + xhr.responseText));
-                return;
-              }
-              resolve(res);
-            } catch (e) {
-              reject(new Error("Failed to parse Drive completion response: " + xhr.responseText));
-            }
-          } else {
-            reject(new Error("Drive upload rejected (" + xhr.status + "): " + xhr.responseText));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error("Network error during direct Drive transfer."));
-        xhr.send(fileBlob);
-      });
     }
 
     async function executeGasRequest(data, method = "POST", maxRetries = 3) {

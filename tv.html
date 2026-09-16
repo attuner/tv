@@ -69,7 +69,6 @@
       font-weight: 600; letter-spacing: 0.5px;
     }
 
-    /* Unmute Reminder Banner */
     .unmute-banner {
       background: linear-gradient(90deg, var(--accent-tv), #FF6600);
       color: #FFF;
@@ -85,7 +84,7 @@
       box-shadow: 0 4px 16px rgba(255, 51, 102, 0.4);
     }
 
-    /* 16:9 Clean TV Bezel - Lines Removed */
+    /* Clean 16:9 Cinema Viewport - Lines completely eliminated */
     .tv-bezel {
       width: 100%;
       aspect-ratio: 16 / 9;
@@ -109,7 +108,7 @@
       margin: 0;
     }
 
-    /* Seamless Dual Player Viewports */
+    /* Seamless Dual-Player Viewports */
     .tv-video {
       width: 100%;
       height: 100%;
@@ -233,10 +232,10 @@
     </header>
 
     <div id="unmuteBanner" class="unmute-banner" onclick="unmuteTV()">
-      <span>🔊 AUDIO MUTED (BROWSER POLICY) - TAP TO UNMUTE</span>
+      <span>🔊 AUDIO MUTED (AUTOPLAY POLICY) - TAP TO UNMUTE</span>
     </div>
 
-    <!-- CLEAN DUAL-PLAYER MONITOR -->
+    <!-- DUAL PLAYER CONTAINERS -->
     <div class="tv-bezel" id="tvBezel">
       <video id="tvPlayerA" class="tv-video active-layer" playsinline webkit-playsinline preload="auto" crossorigin="anonymous"></video>
       <video id="tvPlayerB" class="tv-video buffer-layer" playsinline webkit-playsinline preload="auto" crossorigin="anonymous"></video>
@@ -309,7 +308,6 @@
     let recentlyPlayedHistory = [];
     let pollTimerId = null;
 
-    // Dual Player Instances
     let activePlayer = document.getElementById("tvPlayerA");
     let bufferPlayer = document.getElementById("tvPlayerB");
 
@@ -319,7 +317,7 @@
       initProgressBarSeek();
       initRemoteDpadKeys();
 
-      // Automatic instantaneous start on open (No Standby)
+      // Start television playback immediately on load
       fetchLiveManifest(true);
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
@@ -343,7 +341,7 @@
         document.getElementById("currentTimestamp").textContent =
           `${formatTime(curSec)} / ${formatTime(durSec)}`;
 
-        // 10-Second Pre-buffer Engine: Trigger background buffer 10 seconds before video end
+        // Pre-buffer next video 10 seconds in advance
         const timeLeft = player.duration - player.currentTime;
         if (timeLeft <= 10 && timeLeft > 0.5) {
           triggerNextVideoPrebuffer();
@@ -358,7 +356,7 @@
 
       player.addEventListener("error", () => {
         if (player === activePlayer) {
-          console.warn("Player stream error, advancing seamlessly...");
+          console.warn("Video streaming error, advancing to next episode...");
           handleSeamlessVideoEnd();
         }
       });
@@ -468,13 +466,10 @@
           }
         }
       } catch (err) {
-        console.warn("Manifest update error:", err.message);
+        console.warn("Manifest update notice:", err.message);
       }
     }
 
-    /**
-     * Immediate Playback Dispatcher
-     */
     function playCurrentVideoDirect(isInitialLoad = false) {
       if (currentQueue.length === 0) return;
 
@@ -490,12 +485,10 @@
       const promise = activePlayer.play();
       if (promise !== undefined) {
         promise.catch((err) => {
-          // If browser restricts unmuted autoplay, start muted immediately without waiting for a click
           activePlayer.muted = true;
           activePlayer.play().then(() => {
             document.getElementById("unmuteBanner").style.display = "inline-flex";
           }).catch(() => {
-            // Fallback to direct Drive download link if CDN link encounters issues
             activePlayer.src = track.downloadUrl;
             activePlayer.play().catch(() => {});
           });
@@ -503,9 +496,6 @@
       }
     }
 
-    /**
-     * 10-Second Pre-buffer Engine: Loads data in advance on background player
-     */
     function triggerNextVideoPrebuffer() {
       if (currentQueue.length <= 1) return;
 
@@ -515,14 +505,10 @@
       preloadedNextTrackIndex = nextIndex;
       const nextTrack = currentQueue[nextIndex];
 
-      // Buffer data in advance so video is ready
       bufferPlayer.src = nextTrack.streamUrl;
       bufferPlayer.load();
     }
 
-    /**
-     * 0ms Seamless Handover between Active and Buffer Players
-     */
     function handleSeamlessVideoEnd() {
       if (currentQueue.length === 0) return;
 
@@ -532,12 +518,12 @@
       currentTrackIndex = (currentTrackIndex + 1) % currentQueue.length;
       const nextTrack = currentQueue[currentTrackIndex];
 
-      // Swap Players
+      // Swap Dual Players
       const oldActive = activePlayer;
       activePlayer = bufferPlayer;
       bufferPlayer = oldActive;
 
-      // Swap Layers
+      // Swap Visibility
       activePlayer.className = "tv-video active-layer";
       bufferPlayer.className = "tv-video buffer-layer";
 
@@ -547,7 +533,6 @@
       activePlayer.volume = userBaseVolume;
       activePlayer.muted = bufferPlayer.muted;
 
-      // If buffer is already loaded, start immediately (0ms gap)
       const promise = activePlayer.play();
       if (promise !== undefined) {
         promise.catch(() => {
