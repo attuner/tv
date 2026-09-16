@@ -23,237 +23,195 @@
       background-color: #000000;
       overflow: hidden;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      user-select: none;
-      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    .video-viewport-wrapper {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #000000;
-    }
-
-    /* Auto Aspect Ratio Based on Uploaded Video Resolution */
-    .tv-viewport-video {
-      max-width: 100vw;
-      max-height: 100vh;
-      max-height: 100dvh;
-      width: auto;
-      height: auto;
-      aspect-ratio: auto;
-      object-fit: contain;
-      background: #000000;
-      z-index: 2;
-    }
-
-    /* Status HUD */
-    .tv-status-overlay {
+    /* Start TV Modal Gate */
+    .start-gate {
       position: fixed;
-      top: 18px;
-      left: 18px;
-      z-index: 10;
+      inset: 0;
+      background: #000000;
+      z-index: 999;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
+      align-items: center;
+      justify-content: center;
     }
 
-    .status-badge-row {
+    .start-btn {
+      background: linear-gradient(135deg, #FF3366, #FF6600);
+      color: #FFFFFF;
+      border: none;
+      padding: 20px 48px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 0 35px rgba(255, 51, 102, 0.55);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-transform: uppercase;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 45px rgba(255, 51, 102, 0.85);
+    }
+
+    .start-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Video Player Viewport - Dynamic Aspect Ratio */
+    .tv-container {
+      position: relative;
+      width: 100vw;
+      height: calc(100vh - 65px);
+      height: calc(100dvh - 65px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+    }
+
+    .tv-video {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      background: #000000;
+    }
+
+    /* Minimal Bottom Control Bar with Only Previous Button */
+    .tv-bottom-bar {
+      width: 100vw;
+      height: 65px;
+      background: #0a0c10;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+    }
+
+    .prev-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #FFFFFF;
+      padding: 10px 24px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(18, 22, 31, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #F0F6FC;
-      letter-spacing: 0.5px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.2s ease;
     }
 
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+    .prev-btn:hover {
       background: #FF3366;
-      box-shadow: 0 0 8px #FF3366;
-      animation: pulseDot 1.5s infinite;
+      border-color: #FF3366;
+      box-shadow: 0 0 16px rgba(255, 51, 102, 0.4);
     }
 
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+    .prev-btn:active {
+      transform: scale(0.95);
     }
 
-    .track-meta-chip {
-      background: rgba(18, 22, 31, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 8px 14px;
-      border-radius: 8px;
-      max-width: 320px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-    }
-
-    .meta-title {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #FFFFFF;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .meta-channel {
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 0.7rem;
-      color: #00F0FF;
-      margin-top: 2px;
-    }
-
-    .unmute-badge {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      background: rgba(255, 51, 102, 0.95);
-      color: #FFFFFF;
-      padding: 8px 18px;
-      border-radius: 999px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      z-index: 20;
-      display: none;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-      cursor: pointer;
-    }
-
-    /* Embedded iframe fallback when browser blocks range headers */
-    .tv-fallback-iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      z-index: 3;
-      display: none;
+    .prev-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
     }
   </style>
 </head>
 <body>
 
-  <div class="tv-status-overlay" id="statusHud">
-    <div class="status-badge-row">
-      <span class="live-dot"></span>
-      <span id="hudState">LIVE BROADCAST</span>
-    </div>
-    <div class="track-meta-chip">
-      <div class="meta-title" id="hudTitle">Connecting Stream...</div>
-      <div class="meta-channel" id="hudChannel">@channel</div>
-    </div>
+  <!-- Fullscreen Initial User-Gesture Gate -->
+  <div id="startGate" class="start-gate">
+    <button class="start-btn" onclick="startPulseTV()">📺 START TV</button>
   </div>
 
-  <div id="unmuteBadge" class="unmute-badge" onclick="handleUnmute()">🔊 TAP TO UNMUTE</div>
-
-  <div class="video-viewport-wrapper">
-    <!-- Active Native Video Player with Full On-Screen Controls -->
+  <!-- Pure Video Player Container -->
+  <div class="tv-container">
     <video
       id="mainPlayer"
-      class="tv-viewport-video"
-      autoplay
+      class="tv-video"
       controls
       playsinline
       webkit-playsinline
       preload="auto">
     </video>
+  </div>
 
-    <!-- Hidden Preloader for Gapless 10-Second Pre-buffering -->
-    <video id="preloader" style="display:none;" preload="auto"></video>
-
-    <!-- Fallback iframe player for strict Drive environments -->
-    <iframe id="embedPlayer" class="tv-fallback-iframe" allow="autoplay; fullscreen"></iframe>
+  <!-- Bottom Bar: Only Previous Button -->
+  <div class="tv-bottom-bar">
+    <button class="prev-btn" onclick="channelDown()" title="Previous Episode">
+      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+      <span>PREVIOUS</span>
+    </button>
   </div>
 
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
     const POLL_INTERVAL = 15000;
+    const VIDEO_GAP_DELAY_MS = 2000; // Exact 2-second delay between videos
 
     let currentQueue = [];
     let currentTrackIndex = 0;
-    let preloadedNextTrackIndex = -1;
     let cachedManifestEtag = null;
     let pollTimerId = null;
+    let delayTimerId = null;
+    let tvStarted = false;
 
     const mainPlayer = document.getElementById("mainPlayer");
-    const preloader = document.getElementById("preloader");
-    const embedPlayer = document.getElementById("embedPlayer");
+    const startGate = document.getElementById("startGate");
 
     window.addEventListener("DOMContentLoaded", () => {
       initPlayerEvents();
-      fetchLiveManifest(true);
+      fetchLiveManifest();
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
 
-    function handleUnmute() {
-      mainPlayer.muted = false;
-      document.getElementById("unmuteBadge").style.display = "none";
+    // Gesture unlock handler that ensures unmuted auto-progression on all platforms
+    function startPulseTV() {
+      tvStarted = true;
+      startGate.style.display = "none";
+
+      if (currentQueue.length > 0) {
+        playVideo(currentQueue[currentTrackIndex]);
+      }
     }
 
     function initPlayerEvents() {
-      mainPlayer.addEventListener("timeupdate", () => {
-        if (!mainPlayer.duration || !isFinite(mainPlayer.duration)) return;
-
-        // Pre-buffer next video in background 10 seconds before completion
-        const timeLeft = mainPlayer.duration - mainPlayer.currentTime;
-        if (timeLeft <= 10 && timeLeft > 0.5) {
-          triggerNextVideoPrebuffer();
-        }
-      });
-
-      // Advance to next video immediately upon finish
+      // Upon finishing, wait exactly 2 seconds and auto-play next video
       mainPlayer.addEventListener("ended", () => {
-        handleTrackEnded();
+        scheduleNextVideo();
       });
 
-      // Handle stream errors by falling back to Drive embed player or advancing
+      // If an individual video errors, also skip to the next after 2 seconds
       mainPlayer.addEventListener("error", () => {
-        console.warn("Direct stream error encountered, switching to web preview player...");
-        const track = currentQueue[currentTrackIndex];
-        if (track && track.embedUrl) {
-          mainPlayer.style.display = "none";
-          embedPlayer.src = track.embedUrl;
-          embedPlayer.style.display = "block";
-        } else {
-          handleTrackEnded();
+        if (tvStarted) {
+          console.warn("Stream error encountered, advancing to next video in 2s...");
+          scheduleNextVideo();
         }
-      });
-
-      mainPlayer.addEventListener("waiting", () => {
-        document.getElementById("hudState").textContent = "BUFFERING...";
-      });
-
-      mainPlayer.addEventListener("playing", () => {
-        document.getElementById("hudState").textContent = "LIVE BROADCAST";
       });
     }
 
-    async function fetchLiveManifest(isInitial = false) {
+    function scheduleNextVideo() {
+      if (delayTimerId) clearTimeout(delayTimerId);
+      delayTimerId = setTimeout(() => {
+        channelUp();
+      }, VIDEO_GAP_DELAY_MS);
+    }
+
+    async function fetchLiveManifest() {
       try {
         let endpoint = `${GAS_ENDPOINT_URL}?action=getLiveManifest`;
         if (cachedManifestEtag) endpoint += `&etag=${encodeURIComponent(cachedManifestEtag)}`;
@@ -269,9 +227,10 @@
             const isFirstLoad = currentQueue.length === 0;
             currentQueue = json.data.manifest;
 
-            if (isFirstLoad) {
+            // If user has already clicked START TV and queue was empty, play now
+            if (isFirstLoad && tvStarted) {
               currentTrackIndex = 0;
-              playCurrentVideo();
+              playVideo(currentQueue[0]);
             }
           }
         }
@@ -280,54 +239,38 @@
       }
     }
 
-    function playCurrentVideo() {
-      if (currentQueue.length === 0) return;
-      const track = currentQueue[currentTrackIndex];
-      preloadedNextTrackIndex = -1;
+    function playVideo(track) {
+      if (!track) return;
+      if (delayTimerId) clearTimeout(delayTimerId);
 
-      // Update HUD
-      document.getElementById("hudTitle").textContent = track.title || track.fileName;
-      document.getElementById("hudChannel").textContent = `@${track.uploaderUsername} (${track.uploaderName})`;
-
-      // Reset embed player
-      embedPlayer.style.display = "none";
-      embedPlayer.src = "";
-      mainPlayer.style.display = "block";
-
+      // Reset previous source
+      mainPlayer.pause();
       mainPlayer.src = track.streamUrl;
-      const promise = mainPlayer.play();
+      mainPlayer.load();
 
-      if (promise !== undefined) {
-        promise.catch(() => {
-          // Autoplay policy: start muted and display unmute button
-          mainPlayer.muted = true;
-          mainPlayer.play().then(() => {
-            document.getElementById("unmuteBadge").style.display = "block";
-          }).catch(() => {
-            // Direct playback blocked, fallback to embedded player
-            mainPlayer.style.display = "none";
-            embedPlayer.src = track.embedUrl;
-            embedPlayer.style.display = "block";
+      // Autoplay with audio enabled across all modern engines
+      const playPromise = mainPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("Direct stream failed, falling back to download link...", err);
+          mainPlayer.src = track.downloadUrl;
+          mainPlayer.play().catch((fallbackErr) => {
+            console.warn("Playback blocked by browser policy:", fallbackErr);
           });
         });
       }
     }
 
-    function triggerNextVideoPrebuffer() {
-      if (currentQueue.length <= 1) return;
-      const nextIndex = (currentTrackIndex + 1) % currentQueue.length;
-      if (preloadedNextTrackIndex === nextIndex) return;
-
-      preloadedNextTrackIndex = nextIndex;
-      const nextTrack = currentQueue[nextIndex];
-      preloader.src = nextTrack.streamUrl;
-      preloader.load();
-    }
-
-    function handleTrackEnded() {
+    function channelUp() {
       if (currentQueue.length === 0) return;
       currentTrackIndex = (currentTrackIndex + 1) % currentQueue.length;
-      playCurrentVideo();
+      playVideo(currentQueue[currentTrackIndex]);
+    }
+
+    function channelDown() {
+      if (currentQueue.length === 0) return;
+      currentTrackIndex = (currentTrackIndex - 1 + currentQueue.length) % currentQueue.length;
+      playVideo(currentQueue[currentTrackIndex]);
     }
   </script>
 </body>
