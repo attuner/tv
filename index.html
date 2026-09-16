@@ -104,15 +104,10 @@
 
     .tab-btn.active { background: var(--accent-glow); color: var(--accent-tv); font-weight: 700; }
 
-    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, .dropzone:focus-visible {
-      outline: 3px solid var(--accent-tv) !important;
-      outline-offset: 3px !important;
-    }
-
     .form-group { margin-bottom: 20px; }
     label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; }
 
-    input[type="text"], input[type="password"], select {
+    input[type="text"], input[type="password"] {
       width: 100%; background: rgba(0, 0, 0, 0.5);
       border: 1px solid var(--panel-border); border-radius: 8px;
       padding: 14px 16px; color: var(--text-primary);
@@ -120,7 +115,7 @@
       outline: none; transition: border-color 0.2s;
     }
 
-    input:focus, select:focus {
+    input:focus {
       border-color: var(--accent-tv);
       box-shadow: 0 0 0 2px var(--accent-glow);
     }
@@ -220,7 +215,7 @@
     .progress-box { margin-top: 20px; display: none; }
     .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 8px; font-weight: 700; color: var(--accent-tv); }
     .progress-bar-bg { height: 12px; background: rgba(0, 0, 0, 0.6); border-radius: 6px; overflow: hidden; border: 1px solid var(--panel-border); }
-    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.15s ease-out; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.15s linear; }
 
     .preview-player { width: 100%; margin: 20px 0; display: none; }
 
@@ -253,10 +248,12 @@
 
     <div id="alertBox" class="alert"></div>
 
+    <!-- AUTHENTICATION & PASSWORD RESET CARD -->
     <div id="authPanel" class="card">
       <div class="tabs" role="tablist">
-        <button id="tabLoginBtn" class="tab-btn active" role="tab" aria-selected="true" onclick="switchAuthTab('login')">SIGN IN</button>
-        <button id="tabRegisterBtn" class="tab-btn" role="tab" aria-selected="false" onclick="switchAuthTab('register')">CREATE BROADCASTER ACCOUNT</button>
+        <button id="tabLoginBtn" class="tab-btn active" role="tab" onclick="switchAuthTab('login')">SIGN IN</button>
+        <button id="tabRegisterBtn" class="tab-btn" role="tab" onclick="switchAuthTab('register')">CREATE ACCOUNT</button>
+        <button id="tabResetBtn" class="tab-btn" role="tab" onclick="switchAuthTab('reset')">RESET PASSWORD</button>
       </div>
 
       <form id="authForm" onsubmit="handleAuthSubmit(event)">
@@ -266,18 +263,18 @@
         </div>
 
         <div class="form-group">
-          <label for="username">Broadcaster Channel Handle</label>
+          <label for="username">Channel Handle / Username</label>
           <input type="text" id="username" required autocomplete="username" placeholder="lowercase letters, numbers, underscores" maxlength="20">
         </div>
 
-        <div class="form-group">
-          <label for="password">Security Passphrase</label>
-          <input type="password" id="password" required autocomplete="current-password" placeholder="Min 8 chars: 1 upper, 1 num, 1 sym" maxlength="100">
+        <div id="passwordGroup" class="form-group">
+          <label for="password" id="passLabel">Password</label>
+          <input type="password" id="password" autocomplete="current-password" placeholder="Enter your password" maxlength="100">
         </div>
 
         <div id="confirmPassGroup" class="form-group" style="display: none;">
-          <label for="confirmPassword">Confirm Passphrase</label>
-          <input type="password" id="confirmPassword" autocomplete="new-password" placeholder="Re-enter your passphrase" maxlength="100">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" autocomplete="new-password" placeholder="Re-enter your password" maxlength="100">
         </div>
 
         <button type="submit" id="authSubmitBtn" class="btn btn-primary">
@@ -286,6 +283,7 @@
       </form>
     </div>
 
+    <!-- STUDIO OPERATOR CONSOLE -->
     <div id="studioPanel" class="card" style="display: none;">
       <div class="user-banner">
         <div class="user-info">
@@ -301,8 +299,8 @@
       </div>
 
       <div class="tabs" role="tablist">
-        <button id="tabCameraBtn" class="tab-btn active" role="tab" aria-selected="true" onclick="switchStudioTab('camera')">LIVE CAMERA RECORDER</button>
-        <button id="tabFileBtn" class="tab-btn" role="tab" aria-selected="false" onclick="switchStudioTab('file')">MASTER VIDEO INGEST (256 MB)</button>
+        <button id="tabCameraBtn" class="tab-btn active" role="tab" onclick="switchStudioTab('camera')">LIVE CAMERA RECORDER</button>
+        <button id="tabFileBtn" class="tab-btn" role="tab" onclick="switchStudioTab('file')">MASTER VIDEO INGEST (256 MB)</button>
       </div>
 
       <div id="cameraConsole">
@@ -326,7 +324,7 @@
       </div>
 
       <div id="fileConsole" style="display: none;">
-        <div class="dropzone" id="dropArea" tabindex="0" role="button" aria-label="Drop video file or click to select" onclick="document.getElementById('videoFileInput').click()" onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('videoFileInput').click()">
+        <div class="dropzone" id="dropArea" tabindex="0" onclick="document.getElementById('videoFileInput').click()">
           <svg style="width:48px;height:48px;fill:var(--text-muted);margin-bottom:12px;" viewBox="0 0 24 24">
             <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
           </svg>
@@ -375,8 +373,8 @@
 
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
-    const MAX_FILE_SIZE = 256 * 1024 * 1024; // 256 MB Limit
-    const CHUNK_BYTE_SIZE = 3 * 1024 * 1024; // 3 MB raw binary slice (converts to safe ~4MB text payload)
+    const MAX_FILE_SIZE = 256 * 1024 * 1024;
+    const CHUNK_BYTE_SIZE = 3 * 1024 * 1024; // 3MB raw binary slice per chunk
 
     let currentAuthMode = "login";
     let currentUserSession = null;
@@ -406,13 +404,6 @@
       setTimeout(() => { box.style.display = "none"; }, 6000);
     }
 
-    async function computeClientSha256(plaintext, salt) {
-      const encoder = new TextEncoder();
-      const payload = encoder.encode(plaintext + "::" + salt);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", payload);
-      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-    }
-
     function checkStoredSession() {
       const raw = localStorage.getItem("PULSE_TV_AUTH_SESSION");
       if (raw) {
@@ -427,15 +418,23 @@
 
     function switchAuthTab(mode) {
       currentAuthMode = mode;
-      const isLogin = mode === "login";
-      document.getElementById("tabLoginBtn").className = isLogin ? "tab-btn active" : "tab-btn";
-      document.getElementById("tabLoginBtn").setAttribute("aria-selected", isLogin);
-      document.getElementById("tabRegisterBtn").className = !isLogin ? "tab-btn active" : "tab-btn";
-      document.getElementById("tabRegisterBtn").setAttribute("aria-selected", !isLogin);
-      document.getElementById("fullNameGroup").style.display = isLogin ? "none" : "block";
-      document.getElementById("confirmPassGroup").style.display = isLogin ? "none" : "block";
-      document.getElementById("authSubmitBtn").querySelector("span").textContent =
-        isLogin ? "SIGN IN TO TV STUDIO" : "REGISTER BROADCASTER";
+      document.getElementById("tabLoginBtn").className = mode === "login" ? "tab-btn active" : "tab-btn";
+      document.getElementById("tabRegisterBtn").className = mode === "register" ? "tab-btn active" : "tab-btn";
+      document.getElementById("tabResetBtn").className = mode === "reset" ? "tab-btn active" : "tab-btn";
+
+      document.getElementById("fullNameGroup").style.display = (mode === "register" || mode === "reset") ? "block" : "none";
+      document.getElementById("confirmPassGroup").style.display = (mode === "register" || mode === "reset") ? "block" : "none";
+
+      if (mode === "reset") {
+        document.getElementById("passLabel").textContent = "New Password";
+        document.getElementById("authSubmitBtn").querySelector("span").textContent = "CHANGE & RESET PASSWORD";
+      } else if (mode === "register") {
+        document.getElementById("passLabel").textContent = "Password";
+        document.getElementById("authSubmitBtn").querySelector("span").textContent = "REGISTER BROADCASTER";
+      } else {
+        document.getElementById("passLabel").textContent = "Password";
+        document.getElementById("authSubmitBtn").querySelector("span").textContent = "SIGN IN TO TV STUDIO";
+      }
     }
 
     async function handleAuthSubmit(e) {
@@ -445,20 +444,15 @@
       const submitBtn = document.getElementById("authSubmitBtn");
 
       if (!/^[a-z0-9_]{3,20}$/.test(user)) {
-        showAlert("Channel Handle must be 3-20 lowercase alphanumeric characters or underscores.");
+        showAlert("Username must be 3-20 lowercase alphanumeric characters or underscores.");
         return;
       }
 
-      if (currentAuthMode === "register") {
+      if (currentAuthMode === "reset") {
         const fullName = document.getElementById("fullName").value.trim();
         const confPass = document.getElementById("confirmPassword").value;
-
-        if (!fullName) {
-          showAlert("Broadcaster Name is required.");
-          return;
-        }
-        if (pass.length < 8 || !/[A-Z]/.test(pass) || !/[0-9]/.test(pass) || !/[^a-zA-Z0-9]/.test(pass)) {
-          showAlert("Password requires at least 8 chars: 1 uppercase, 1 number, and 1 symbol.");
+        if (!fullName || !pass) {
+          showAlert("Full Name and New Password are required.");
           return;
         }
         if (pass !== confPass) {
@@ -468,11 +462,45 @@
 
         submitBtn.disabled = true;
         try {
-          const clientHash = await computeClientSha256(pass, user + "_registration_seed");
+          const resp = await executeGasRequest({
+            action: "resetPassword",
+            username: user,
+            fullName: fullName,
+            newPassword: pass
+          });
+
+          if (resp.success) {
+            showAlert("Password reset successfully. Please sign in.", false);
+            switchAuthTab("login");
+          } else {
+            showAlert(resp.error || "Reset failed.");
+          }
+        } catch (err) {
+          showAlert("Network failure resetting password.");
+        } finally {
+          submitBtn.disabled = false;
+        }
+        return;
+      }
+
+      if (currentAuthMode === "register") {
+        const fullName = document.getElementById("fullName").value.trim();
+        const confPass = document.getElementById("confirmPassword").value;
+        if (!fullName || !pass) {
+          showAlert("Full Name and Password are required.");
+          return;
+        }
+        if (pass !== confPass) {
+          showAlert("Passwords do not match.");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        try {
           const resp = await executeGasRequest({
             action: "registerUser",
             username: user,
-            clientHash: clientHash,
+            password: pass,
             fullName: fullName
           });
 
@@ -491,18 +519,10 @@
       } else {
         submitBtn.disabled = true;
         try {
-          const saltResp = await executeGasRequest({ action: "getSalt", username: user }, "GET");
-          if (!saltResp.success || !saltResp.data.salt) {
-            showAlert(saltResp.error || "Failed to retrieve authentication challenge.");
-            submitBtn.disabled = false;
-            return;
-          }
-
-          const clientHash = await computeClientSha256(pass, saltResp.data.salt);
           const resp = await executeGasRequest({
             action: "authenticateUser",
             username: user,
-            clientHash: clientHash
+            password: pass
           });
 
           if (resp.success) {
@@ -542,9 +562,7 @@
     function switchStudioTab(tab) {
       const isCam = tab === "camera";
       document.getElementById("tabCameraBtn").className = isCam ? "tab-btn active" : "tab-btn";
-      document.getElementById("tabCameraBtn").setAttribute("aria-selected", isCam);
       document.getElementById("tabFileBtn").className = !isCam ? "tab-btn active" : "tab-btn";
-      document.getElementById("tabFileBtn").setAttribute("aria-selected", !isCam);
       document.getElementById("cameraConsole").style.display = isCam ? "block" : "none";
       document.getElementById("fileConsole").style.display = !isCam ? "block" : "none";
     }
@@ -558,7 +576,6 @@
 
     async function initializeCameraCapture(facingMode) {
       teardownMediaTracks();
-
       document.getElementById("frontCamBtn").style.borderColor = facingMode === "user" ? "var(--accent-tv)" : "var(--panel-border)";
       document.getElementById("backCamBtn").style.borderColor = facingMode === "environment" ? "var(--accent-tv)" : "var(--panel-border)";
 
@@ -566,10 +583,9 @@
         video: {
           facingMode: facingMode === "environment" ? { ideal: "environment" } : "user",
           width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30 }
+          height: { ideal: 720 }
         },
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audio: true
       };
 
       try {
@@ -590,14 +606,13 @@
 
     function startVideoRecording() {
       if (!videoMediaStream) return;
-
       let mimeType = "video/webm;codecs=vp8,opus";
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
       }
 
       recordedChunks = [];
-      mediaRecorder = new MediaRecorder(videoMediaStream, { mimeType, videoBitsPerSecond: 2500000 });
+      mediaRecorder = new MediaRecorder(videoMediaStream, { mimeType });
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) recordedChunks.push(e.data);
@@ -605,7 +620,6 @@
 
       mediaRecorder.onstop = () => {
         processedBlob = new Blob(recordedChunks, { type: mimeType });
-
         if (activePreviewBlobUrl) URL.revokeObjectURL(activePreviewBlobUrl);
         activePreviewBlobUrl = URL.createObjectURL(processedBlob);
 
@@ -666,7 +680,7 @@
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        showAlert("File exceeds the strict 256 MB limit.");
+        showAlert("File exceeds 256 MB limit.");
         return;
       }
 
@@ -695,9 +709,6 @@
       return btoa(binary);
     }
 
-    /**
-     * Chunked Upload Pipeline: Eliminates CORS blocks and handles up to 256 MB smoothly
-     */
     async function initiateChunkedUploadPipeline() {
       if (!processedBlob) {
         showAlert("No video file selected or recorded.");
@@ -791,7 +802,6 @@
           throw new Error(finalResp.error || "Failed to finalize broadcast.");
         }
       } catch (err) {
-        console.error("Upload Failure:", err);
         showAlert("Upload Error: " + err.message);
         publishBtn.disabled = false;
       }
