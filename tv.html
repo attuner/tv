@@ -25,19 +25,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
     }
 
-    /* Seamless Dual Players: Auto-Aspect Ratio Matching Uploaded Video */
+    .video-viewport-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000000;
+    }
+
+    /* Auto Aspect Ratio Based on Uploaded Video Resolution */
     .tv-viewport-video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      margin: auto;
       max-width: 100vw;
       max-height: 100vh;
       max-height: 100dvh;
@@ -46,22 +50,10 @@
       aspect-ratio: auto;
       object-fit: contain;
       background: #000000;
-      transition: opacity 0.15s ease-in-out;
-    }
-
-    .active-video {
-      opacity: 1;
       z-index: 2;
-      pointer-events: auto;
     }
 
-    .buffer-video {
-      opacity: 0;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    /* Minimal Floating Status HUD */
+    /* Status HUD */
     .tv-status-overlay {
       position: fixed;
       top: 18px;
@@ -78,7 +70,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(18, 22, 31, 0.75);
+      background: rgba(18, 22, 31, 0.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -89,7 +81,7 @@
       font-weight: 700;
       color: #F0F6FC;
       letter-spacing: 0.5px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     }
 
     .live-dot {
@@ -107,14 +99,14 @@
     }
 
     .track-meta-chip {
-      background: rgba(18, 22, 31, 0.75);
+      background: rgba(18, 22, 31, 0.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 8px 14px;
       border-radius: 8px;
       max-width: 320px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     }
 
     .meta-title {
@@ -127,36 +119,17 @@
       text-overflow: ellipsis;
     }
 
-    .meta-time {
+    .meta-channel {
       font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
       font-size: 0.7rem;
       color: #00F0FF;
       margin-top: 2px;
     }
 
-    /* Minimal Bottom Thin Progress Bar */
-    .tv-timeline-progress {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100vw;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.1);
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    .timeline-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #FF3366, #00F0FF);
-      transition: width 0.15s linear;
-    }
-
-    /* Unmute Banner for Autoplay Restrictions */
     .unmute-badge {
       position: fixed;
-      bottom: 20px;
+      top: 18px;
+      right: 18px;
       background: rgba(255, 51, 102, 0.95);
       color: #FFFFFF;
       padding: 8px 18px;
@@ -167,33 +140,55 @@
       z-index: 20;
       display: none;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+    }
+
+    /* Embedded iframe fallback when browser blocks range headers */
+    .tv-fallback-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      z-index: 3;
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Minimal Floating Live Status HUD -->
   <div class="tv-status-overlay" id="statusHud">
     <div class="status-badge-row">
       <span class="live-dot"></span>
-      <span id="hudState">LIVE TV</span>
+      <span id="hudState">LIVE BROADCAST</span>
     </div>
     <div class="track-meta-chip">
       <div class="meta-title" id="hudTitle">Connecting Stream...</div>
-      <div class="meta-time" id="hudTimecode">00:00 / 00:00</div>
+      <div class="meta-channel" id="hudChannel">@channel</div>
     </div>
   </div>
 
-  <div id="unmuteBadge" class="unmute-badge">🔊 TAP SCREEN TO UNMUTE AUDIO</div>
+  <div id="unmuteBadge" class="unmute-badge" onclick="handleUnmute()">🔊 TAP TO UNMUTE</div>
 
-  <!-- Bottom Slim Progress Line -->
-  <div class="tv-timeline-progress">
-    <div id="progressFill" class="timeline-bar-fill"></div>
+  <div class="video-viewport-wrapper">
+    <!-- Active Native Video Player with Full On-Screen Controls -->
+    <video
+      id="mainPlayer"
+      class="tv-viewport-video"
+      autoplay
+      controls
+      playsinline
+      webkit-playsinline
+      preload="auto">
+    </video>
+
+    <!-- Hidden Preloader for Gapless 10-Second Pre-buffering -->
+    <video id="preloader" style="display:none;" preload="auto"></video>
+
+    <!-- Fallback iframe player for strict Drive environments -->
+    <iframe id="embedPlayer" class="tv-fallback-iframe" allow="autoplay; fullscreen"></iframe>
   </div>
-
-  <!-- Dual Independent Players for 0ms Pre-buffering -->
-  <video id="playerA" class="tv-viewport-video active-video" autoplay playsinline webkit-playsinline></video>
-  <video id="playerB" class="tv-viewport-video buffer-video" playsinline webkit-playsinline></video>
 
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
@@ -205,70 +200,56 @@
     let cachedManifestEtag = null;
     let pollTimerId = null;
 
-    let activePlayer = document.getElementById("playerA");
-    let bufferPlayer = document.getElementById("playerB");
+    const mainPlayer = document.getElementById("mainPlayer");
+    const preloader = document.getElementById("preloader");
+    const embedPlayer = document.getElementById("embedPlayer");
 
     window.addEventListener("DOMContentLoaded", () => {
-      initPlayer(document.getElementById("playerA"));
-      initPlayer(document.getElementById("playerB"));
-
-      // Tap screen to toggle audio unmute or fullscreen
-      document.body.addEventListener("pointerdown", handleInteraction);
-
-      // Start fetching and playing immediately
+      initPlayerEvents();
       fetchLiveManifest(true);
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
 
-    function handleInteraction() {
-      if (activePlayer.muted) {
-        activePlayer.muted = false;
-        bufferPlayer.muted = false;
-        document.getElementById("unmuteBadge").style.display = "none";
-      }
+    function handleUnmute() {
+      mainPlayer.muted = false;
+      document.getElementById("unmuteBadge").style.display = "none";
     }
 
-    function initPlayer(player) {
-      player.addEventListener("timeupdate", () => {
-        if (player !== activePlayer || !player.duration || !isFinite(player.duration)) return;
+    function initPlayerEvents() {
+      mainPlayer.addEventListener("timeupdate", () => {
+        if (!mainPlayer.duration || !isFinite(mainPlayer.duration)) return;
 
-        const progress = (player.currentTime / player.duration) * 100;
-        document.getElementById("progressFill").style.width = progress + "%";
-
-        const cur = formatTime(player.currentTime);
-        const dur = formatTime(player.duration);
-        document.getElementById("hudTimecode").textContent = `${cur} / ${dur}`;
-
-        // 10-Second Pre-buffer: buffer next video before completion
-        const timeLeft = player.duration - player.currentTime;
+        // Pre-buffer next video in background 10 seconds before completion
+        const timeLeft = mainPlayer.duration - mainPlayer.currentTime;
         if (timeLeft <= 10 && timeLeft > 0.5) {
           triggerNextVideoPrebuffer();
         }
       });
 
-      // 0ms Handover upon completion
-      player.addEventListener("ended", () => {
-        if (player === activePlayer) {
-          handleSeamlessVideoEnd();
+      // Advance to next video immediately upon finish
+      mainPlayer.addEventListener("ended", () => {
+        handleTrackEnded();
+      });
+
+      // Handle stream errors by falling back to Drive embed player or advancing
+      mainPlayer.addEventListener("error", () => {
+        console.warn("Direct stream error encountered, switching to web preview player...");
+        const track = currentQueue[currentTrackIndex];
+        if (track && track.embedUrl) {
+          mainPlayer.style.display = "none";
+          embedPlayer.src = track.embedUrl;
+          embedPlayer.style.display = "block";
+        } else {
+          handleTrackEnded();
         }
       });
 
-      player.addEventListener("error", () => {
-        if (player === activePlayer) {
-          handleSeamlessVideoEnd();
-        }
+      mainPlayer.addEventListener("waiting", () => {
+        document.getElementById("hudState").textContent = "BUFFERING...";
       });
 
-      player.addEventListener("waiting", () => {
-        if (player === activePlayer) {
-          document.getElementById("hudState").textContent = "BUFFERING...";
-        }
-      });
-
-      player.addEventListener("playing", () => {
-        if (player === activePlayer) {
-          document.getElementById("hudState").textContent = "LIVE TV";
-        }
+      mainPlayer.addEventListener("playing", () => {
+        document.getElementById("hudState").textContent = "LIVE BROADCAST";
       });
     }
 
@@ -290,34 +271,43 @@
 
             if (isFirstLoad) {
               currentTrackIndex = 0;
-              playCurrentVideoDirect();
+              playCurrentVideo();
             }
           }
         }
       } catch (err) {
-        console.warn("Manifest update note:", err);
+        console.warn("Manifest update error:", err);
       }
     }
 
-    function playCurrentVideoDirect() {
+    function playCurrentVideo() {
       if (currentQueue.length === 0) return;
       const track = currentQueue[currentTrackIndex];
       preloadedNextTrackIndex = -1;
 
+      // Update HUD
       document.getElementById("hudTitle").textContent = track.title || track.fileName;
+      document.getElementById("hudChannel").textContent = `@${track.uploaderUsername} (${track.uploaderName})`;
 
-      activePlayer.src = track.streamUrl;
-      const promise = activePlayer.play();
+      // Reset embed player
+      embedPlayer.style.display = "none";
+      embedPlayer.src = "";
+      mainPlayer.style.display = "block";
+
+      mainPlayer.src = track.streamUrl;
+      const promise = mainPlayer.play();
 
       if (promise !== undefined) {
         promise.catch(() => {
-          // Autoplay protection fallback
-          activePlayer.muted = true;
-          activePlayer.play().then(() => {
+          // Autoplay policy: start muted and display unmute button
+          mainPlayer.muted = true;
+          mainPlayer.play().then(() => {
             document.getElementById("unmuteBadge").style.display = "block";
           }).catch(() => {
-            activePlayer.src = track.downloadUrl;
-            activePlayer.play().catch(() => {});
+            // Direct playback blocked, fallback to embedded player
+            mainPlayer.style.display = "none";
+            embedPlayer.src = track.embedUrl;
+            embedPlayer.style.display = "block";
           });
         });
       }
@@ -330,43 +320,14 @@
 
       preloadedNextTrackIndex = nextIndex;
       const nextTrack = currentQueue[nextIndex];
-      bufferPlayer.src = nextTrack.streamUrl;
-      bufferPlayer.load();
+      preloader.src = nextTrack.streamUrl;
+      preloader.load();
     }
 
-    function handleSeamlessVideoEnd() {
+    function handleTrackEnded() {
       if (currentQueue.length === 0) return;
-
       currentTrackIndex = (currentTrackIndex + 1) % currentQueue.length;
-      const nextTrack = currentQueue[currentTrackIndex];
-
-      // Instant swap of dual players
-      const oldActive = activePlayer;
-      activePlayer = bufferPlayer;
-      bufferPlayer = oldActive;
-
-      activePlayer.className = "tv-viewport-video active-video";
-      bufferPlayer.className = "tv-viewport-video buffer-video";
-
-      document.getElementById("hudTitle").textContent = nextTrack.title || nextTrack.fileName;
-      activePlayer.muted = bufferPlayer.muted;
-
-      const promise = activePlayer.play();
-      if (promise !== undefined) {
-        promise.catch(() => {
-          activePlayer.src = nextTrack.streamUrl;
-          activePlayer.play().catch(() => {});
-        });
-      }
-
-      preloadedNextTrackIndex = -1;
-    }
-
-    function formatTime(seconds) {
-      const s = Math.floor(seconds) || 0;
-      const mins = Math.floor(s / 60);
-      const secs = s % 60;
-      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      playCurrentVideo();
     }
   </script>
 </body>
