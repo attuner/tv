@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>PULSE TV // LIVE TELEVISION</title>
+  <title>PULSE TV // LIVE STREAM</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,9 +26,11 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
-    /* Seamless Dual Players: Auto Aspect Ratio Based on Uploaded Video */
+    /* Seamless Dual Players: Auto-Aspect Ratio Matching Uploaded Video */
     .tv-viewport-video {
       position: absolute;
       top: 0;
@@ -59,31 +61,137 @@
       pointer-events: none;
     }
 
-    /* Non-intrusive floating indicator for browser autoplay mute policy */
+    /* Minimal Floating Status HUD */
+    .tv-status-overlay {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .status-badge-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(18, 22, 31, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #F0F6FC;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #FF3366;
+      box-shadow: 0 0 8px #FF3366;
+      animation: pulseDot 1.5s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .track-meta-chip {
+      background: rgba(18, 22, 31, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 14px;
+      border-radius: 8px;
+      max-width: 320px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .meta-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meta-time {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.7rem;
+      color: #00F0FF;
+      margin-top: 2px;
+    }
+
+    /* Minimal Bottom Thin Progress Bar */
+    .tv-timeline-progress {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .timeline-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #FF3366, #00F0FF);
+      transition: width 0.15s linear;
+    }
+
+    /* Unmute Banner for Autoplay Restrictions */
     .unmute-badge {
       position: fixed;
-      top: 20px;
-      left: 20px;
-      background: rgba(255, 51, 102, 0.9);
+      bottom: 20px;
+      background: rgba(255, 51, 102, 0.95);
       color: #FFFFFF;
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 999px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 0.8rem;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      z-index: 10;
+      z-index: 20;
       display: none;
-      pointer-events: none;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
     }
   </style>
 </head>
 <body>
 
-  <div id="unmuteBadge" class="unmute-badge">🔊 TAP ANYWHERE TO UNMUTE AUDIO</div>
+  <!-- Minimal Floating Live Status HUD -->
+  <div class="tv-status-overlay" id="statusHud">
+    <div class="status-badge-row">
+      <span class="live-dot"></span>
+      <span id="hudState">LIVE TV</span>
+    </div>
+    <div class="track-meta-chip">
+      <div class="meta-title" id="hudTitle">Connecting Stream...</div>
+      <div class="meta-time" id="hudTimecode">00:00 / 00:00</div>
+    </div>
+  </div>
 
-  <!-- VIDEO ONLY: DUAL RUNNING PLAYERS -->
+  <div id="unmuteBadge" class="unmute-badge">🔊 TAP SCREEN TO UNMUTE AUDIO</div>
+
+  <!-- Bottom Slim Progress Line -->
+  <div class="tv-timeline-progress">
+    <div id="progressFill" class="timeline-bar-fill"></div>
+  </div>
+
+  <!-- Dual Independent Players for 0ms Pre-buffering -->
   <video id="playerA" class="tv-viewport-video active-video" autoplay playsinline webkit-playsinline></video>
   <video id="playerB" class="tv-viewport-video buffer-video" playsinline webkit-playsinline></video>
 
@@ -104,32 +212,41 @@
       initPlayer(document.getElementById("playerA"));
       initPlayer(document.getElementById("playerB"));
 
-      // Any screen touch/click un-mutes and resumes full audio
-      document.body.addEventListener("pointerdown", handleGlobalUnmute, { once: true });
+      // Tap screen to toggle audio unmute or fullscreen
+      document.body.addEventListener("pointerdown", handleInteraction);
 
-      // Immediate play on load
+      // Start fetching and playing immediately
       fetchLiveManifest(true);
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
 
-    function handleGlobalUnmute() {
-      activePlayer.muted = false;
-      bufferPlayer.muted = false;
-      document.getElementById("unmuteBadge").style.display = "none";
+    function handleInteraction() {
+      if (activePlayer.muted) {
+        activePlayer.muted = false;
+        bufferPlayer.muted = false;
+        document.getElementById("unmuteBadge").style.display = "none";
+      }
     }
 
     function initPlayer(player) {
       player.addEventListener("timeupdate", () => {
         if (player !== activePlayer || !player.duration || !isFinite(player.duration)) return;
 
-        // Preload next video 10 seconds before completion
+        const progress = (player.currentTime / player.duration) * 100;
+        document.getElementById("progressFill").style.width = progress + "%";
+
+        const cur = formatTime(player.currentTime);
+        const dur = formatTime(player.duration);
+        document.getElementById("hudTimecode").textContent = `${cur} / ${dur}`;
+
+        // 10-Second Pre-buffer: buffer next video before completion
         const timeLeft = player.duration - player.currentTime;
         if (timeLeft <= 10 && timeLeft > 0.5) {
           triggerNextVideoPrebuffer();
         }
       });
 
-      // 0ms delay: Instantaneous handover
+      // 0ms Handover upon completion
       player.addEventListener("ended", () => {
         if (player === activePlayer) {
           handleSeamlessVideoEnd();
@@ -139,6 +256,18 @@
       player.addEventListener("error", () => {
         if (player === activePlayer) {
           handleSeamlessVideoEnd();
+        }
+      });
+
+      player.addEventListener("waiting", () => {
+        if (player === activePlayer) {
+          document.getElementById("hudState").textContent = "BUFFERING...";
+        }
+      });
+
+      player.addEventListener("playing", () => {
+        if (player === activePlayer) {
+          document.getElementById("hudState").textContent = "LIVE TV";
         }
       });
     }
@@ -165,7 +294,9 @@
             }
           }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Manifest update note:", err);
+      }
     }
 
     function playCurrentVideoDirect() {
@@ -173,12 +304,14 @@
       const track = currentQueue[currentTrackIndex];
       preloadedNextTrackIndex = -1;
 
+      document.getElementById("hudTitle").textContent = track.title || track.fileName;
+
       activePlayer.src = track.streamUrl;
       const promise = activePlayer.play();
 
       if (promise !== undefined) {
         promise.catch(() => {
-          // Autoplay policy: start muted without stopping
+          // Autoplay protection fallback
           activePlayer.muted = true;
           activePlayer.play().then(() => {
             document.getElementById("unmuteBadge").style.display = "block";
@@ -207,7 +340,7 @@
       currentTrackIndex = (currentTrackIndex + 1) % currentQueue.length;
       const nextTrack = currentQueue[currentTrackIndex];
 
-      // Swap Players (Zero Standby)
+      // Instant swap of dual players
       const oldActive = activePlayer;
       activePlayer = bufferPlayer;
       bufferPlayer = oldActive;
@@ -215,9 +348,10 @@
       activePlayer.className = "tv-viewport-video active-video";
       bufferPlayer.className = "tv-viewport-video buffer-video";
 
+      document.getElementById("hudTitle").textContent = nextTrack.title || nextTrack.fileName;
       activePlayer.muted = bufferPlayer.muted;
-      const promise = activePlayer.play();
 
+      const promise = activePlayer.play();
       if (promise !== undefined) {
         promise.catch(() => {
           activePlayer.src = nextTrack.streamUrl;
@@ -226,6 +360,13 @@
       }
 
       preloadedNextTrackIndex = -1;
+    }
+
+    function formatTime(seconds) {
+      const s = Math.floor(seconds) || 0;
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
   </script>
 </body>
