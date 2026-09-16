@@ -25,11 +25,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #FFFFFF;
     }
 
-    /* Start TV Modal Gate */
+    /* Initial One-Click Gesture Gate to unlock Audio/Video Autoplay */
     .start-gate {
       position: fixed;
       inset: 0;
@@ -65,16 +66,17 @@
       transform: scale(0.96);
     }
 
-    /* Video Player Viewport - Dynamic Aspect Ratio */
+    /* Television Screen Container (Auto Aspect Ratio) */
     .tv-container {
       position: relative;
       width: 100vw;
-      height: calc(100vh - 65px);
-      height: calc(100dvh - 65px);
+      height: calc(100vh - 110px);
+      height: calc(100dvh - 110px);
       display: flex;
       align-items: center;
       justify-content: center;
       background: #000000;
+      overflow: hidden;
     }
 
     .tv-video {
@@ -86,25 +88,58 @@
       background: #000000;
     }
 
-    /* Minimal Bottom Control Bar with Only Previous Button */
-    .tv-bottom-bar {
+    .tv-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000000;
+    }
+
+    /* Broadcast Info Bar & Previous Button */
+    .tv-meta-bar {
       width: 100vw;
-      height: 65px;
-      background: #0a0c10;
+      min-height: 110px;
+      background: #0d1117;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 0 20px;
+      justify-content: space-between;
+      padding: 12px 24px;
+      gap: 16px;
+    }
+
+    .broadcast-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 70%;
+    }
+
+    .broadcast-title {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      font-weight: 800;
+      color: #FFFFFF;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.5px;
+    }
+
+    .broadcast-contributor {
+      font-size: 0.85rem;
+      color: #FF3366;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     .prev-btn {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: #FFFFFF;
-      padding: 10px 24px;
+      padding: 12px 26px;
       border-radius: 999px;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
       letter-spacing: 1px;
       cursor: pointer;
@@ -112,6 +147,7 @@
       align-items: center;
       gap: 8px;
       transition: all 0.2s ease;
+      flex-shrink: 0;
     }
 
     .prev-btn:hover {
@@ -125,21 +161,21 @@
     }
 
     .prev-btn svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       fill: currentColor;
     }
   </style>
 </head>
 <body>
 
-  <!-- Fullscreen Initial User-Gesture Gate -->
+  <!-- Fullscreen Start Gate for Browser Permissions -->
   <div id="startGate" class="start-gate">
     <button class="start-btn" onclick="startPulseTV()">📺 START TV</button>
   </div>
 
-  <!-- Pure Video Player Container -->
-  <div class="tv-container">
+  <!-- TV Viewport -->
+  <div class="tv-container" id="playerContainer">
     <video
       id="mainPlayer"
       class="tv-video"
@@ -148,10 +184,15 @@
       webkit-playsinline
       preload="auto">
     </video>
+    <iframe id="iframePlayer" class="tv-iframe" style="display:none;" allow="autoplay; fullscreen"></iframe>
   </div>
 
-  <!-- Bottom Bar: Only Previous Button -->
-  <div class="tv-bottom-bar">
+  <!-- Bottom Information Bar: Title, Contributor Name & Previous Channel Button -->
+  <div class="tv-meta-bar">
+    <div class="broadcast-info">
+      <div id="broadcastTitle" class="broadcast-title">Connecting to Television Buffer...</div>
+      <div id="broadcastContributor" class="broadcast-contributor">Broadcasting Live</div>
+    </div>
     <button class="prev-btn" onclick="channelDown()" title="Previous Episode">
       <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
       <span>PREVIOUS</span>
@@ -171,7 +212,10 @@
     let tvStarted = false;
 
     const mainPlayer = document.getElementById("mainPlayer");
+    const iframePlayer = document.getElementById("iframePlayer");
     const startGate = document.getElementById("startGate");
+    const titleElem = document.getElementById("broadcastTitle");
+    const contributorElem = document.getElementById("broadcastContributor");
 
     window.addEventListener("DOMContentLoaded", () => {
       initPlayerEvents();
@@ -179,7 +223,6 @@
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
 
-    // Gesture unlock handler that ensures unmuted auto-progression on all platforms
     function startPulseTV() {
       tvStarted = true;
       startGate.style.display = "none";
@@ -190,18 +233,22 @@
     }
 
     function initPlayerEvents() {
-      // Upon finishing, wait exactly 2 seconds and auto-play next video
       mainPlayer.addEventListener("ended", () => {
         scheduleNextVideo();
       });
 
-      // If an individual video errors, also skip to the next after 2 seconds
-      mainPlayer.addEventListener("error", () => {
-        if (tvStarted) {
-          console.warn("Stream error encountered, advancing to next video in 2s...");
-          scheduleNextVideo();
-        }
+      mainPlayer.addEventListener("error", (e) => {
+        console.warn("Direct HTML5 stream blocked by Drive. Falling back to native Drive player...", e);
+        // If the browser rejects direct stream headers, automatically fall back to Google's embed player
+        fallbackToEmbedPlayer(currentQueue[currentTrackIndex]);
       });
+    }
+
+    function fallbackToEmbedPlayer(track) {
+      if (!track || !track.fileId) return;
+      mainPlayer.style.display = "none";
+      iframePlayer.style.display = "block";
+      iframePlayer.src = `https://drive.google.com/file/d/${encodeURIComponent(track.fileId)}/preview`;
     }
 
     function scheduleNextVideo() {
@@ -227,7 +274,6 @@
             const isFirstLoad = currentQueue.length === 0;
             currentQueue = json.data.manifest;
 
-            // If user has already clicked START TV and queue was empty, play now
             if (isFirstLoad && tvStarted) {
               currentTrackIndex = 0;
               playVideo(currentQueue[0]);
@@ -243,20 +289,25 @@
       if (!track) return;
       if (delayTimerId) clearTimeout(delayTimerId);
 
-      // Reset previous source
+      // Display Broadcast Title & Contributor Name
+      titleElem.textContent = track.title || track.fileName || "Live Transmission Episode";
+      contributorElem.textContent = `BROADCAST BY @${track.uploaderUsername || "channel"} (${track.uploaderName || "Verified Creator"})`;
+
+      // Reset players to native HTML5 mode
+      iframePlayer.style.display = "none";
+      iframePlayer.src = "";
+      mainPlayer.style.display = "block";
+
       mainPlayer.pause();
-      mainPlayer.src = track.streamUrl;
+      // Use direct streaming format
+      mainPlayer.src = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(track.fileId)}`;
       mainPlayer.load();
 
-      // Autoplay with audio enabled across all modern engines
       const playPromise = mainPlayer.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
-          console.warn("Direct stream failed, falling back to download link...", err);
-          mainPlayer.src = track.downloadUrl;
-          mainPlayer.play().catch((fallbackErr) => {
-            console.warn("Playback blocked by browser policy:", fallbackErr);
-          });
+          console.warn("Direct play rejected by browser policy, engaging preview fallback:", err);
+          fallbackToEmbedPlayer(track);
         });
       }
     }
