@@ -7,9 +7,7 @@
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Pulse TV">
   <meta name="theme-color" content="#090A0F">
-  <meta name="mobile-web-app-capable" content="yes">
 
   <style>
     :root {
@@ -52,33 +50,6 @@
       align-items: center;
     }
 
-    /* Unmute Floating Banner for Autoplay Policy */
-    .unmute-pill {
-      position: fixed;
-      top: calc(16px + env(safe-area-inset-top, 0px));
-      background: rgba(0, 240, 255, 0.95);
-      color: #000;
-      padding: 10px 22px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      letter-spacing: 0.5px;
-      box-shadow: 0 4px 24px rgba(0, 240, 255, 0.5);
-      cursor: pointer;
-      z-index: 10000;
-      display: none;
-      align-items: center;
-      gap: 8px;
-      min-height: 44px;
-      animation: pillFloat 2s ease-in-out infinite;
-    }
-
-    @keyframes pillFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
-    }
-
     header {
       width: 100%;
       display: flex;
@@ -108,9 +79,6 @@
       border-radius: 50%;
       background: var(--accent-crimson);
       box-shadow: 0 0 8px var(--accent-crimson);
-    }
-
-    .live-dot.active {
       animation: livePulse 1.5s infinite;
     }
 
@@ -127,7 +95,7 @@
       letter-spacing: 0.5px;
     }
 
-    /* 4:3 Strict Aspect-Ratio TV Display Frame */
+    /* 4:3 Ratio Bezel Frame */
     .tv-deck-container {
       position: relative;
       width: 100%;
@@ -144,16 +112,13 @@
       justify-content: center;
     }
 
-    /* Auto-zoomed Video to Fill 4:3 Ratio Completely Without Letterbox Borders */
-    .tv-video {
+    /* Auto-zoomed Video to fill 4:3 ratio completely */
+    .tv-frame {
       width: 100%;
       height: 100%;
-      aspect-ratio: 4 / 3;
-      object-fit: cover;
-      object-position: center;
+      border: none;
       background: #000;
-      pointer-events: none; /* Eliminates all overlays/interaction blockers directly over video */
-      display: block;
+      transform: scale(1.02); /* Crop any sub-pixel border gaps */
     }
 
     .meta-panel {
@@ -190,17 +155,15 @@
       border-radius: 3px;
       overflow: hidden;
       margin-bottom: 24px;
-      cursor: pointer;
     }
 
     .live-progress-bar {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
-      transition: width 0.25s linear;
+      transition: width 0.5s linear;
     }
 
-    /* Control Deck Below Video Frame */
     .controls {
       display: flex;
       align-items: center;
@@ -239,54 +202,8 @@
       box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
     }
 
-    .ctrl-btn.btn-play:hover {
-      box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
-      transform: scale(1.06);
-    }
-
-    .ctrl-btn svg {
-      width: 24px;
-      height: 24px;
-      fill: currentColor;
-    }
-
-    .btn-play svg {
-      width: 32px;
-      height: 32px;
-    }
-
-    button:focus-visible, input:focus-visible, .unmute-pill:focus-visible {
-      outline: 3px solid var(--accent-cyan) !important;
-      outline-offset: 4px !important;
-    }
-
-    .volume-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-      width: 100%;
-      max-width: 280px;
-    }
-
-    .volume-slider {
-      flex: 1;
-      height: 6px;
-      
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
-      outline: none;
-    }
-
-    .volume-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent-cyan);
-      cursor: pointer;
-      box-shadow: 0 0 8px var(--accent-cyan);
-    }
+    .ctrl-btn svg { width: 24px; height: 24px; fill: currentColor; }
+    .btn-play svg { width: 32px; height: 32px; }
 
     .queue-panel {
       width: 100%;
@@ -336,68 +253,30 @@
       font-size: 0.85rem;
     }
 
-    .queue-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .queue-tag {
-      font-size: 0.65rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-muted);
-    }
-
-    .toast {
-      position: fixed;
-      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      background: rgba(22, 27, 34, 0.96);
-      border: 1px solid var(--accent-cyan);
-      color: var(--text-main);
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-family: var(--font-mono);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
-      transform: translateY(120px);
-      transition: transform 0.3s ease;
-      z-index: 1000;
-      max-width: 90vw;
-    }
-
-    .toast.visible {
-      transform: translateY(0);
-    }
+    .queue-left { display: flex; align-items: center; gap: 12px; }
+    .queue-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-weight: 700; background: rgba(255, 255, 255, 0.1); color: var(--text-muted); }
   </style>
 </head>
 <body>
 
-  <div id="unmutePill" class="unmute-pill" onclick="handleUnmute()">
-    <span>🔊 TAP TO UNMUTE AUDIO</span>
-  </div>
-
   <div class="container">
     <header>
       <div class="live-badge">
-        <span id="liveDot" class="live-dot"></span>
+        <span class="live-dot"></span>
         <span id="liveStatusText">LIVE ON AIR</span>
       </div>
       <div class="listeners-count" id="listenerReadout">VIEWERS: 1 LIVE</div>
     </header>
 
-    <!-- 4:3 Video Monitor (No Controls or Text Elements Over the Video) -->
+    <!-- 4:3 Video Monitor Frame -->
     <div class="tv-deck-container">
-      <video
-        id="tvVideo"
-        class="tv-video"
-        playsinline
-        webkit-playsinline
-        preload="auto">
-      </video>
+      <iframe
+        id="tvFrame"
+        class="tv-frame"
+        src=""
+        allow="autoplay; fullscreen"
+        allowfullscreen>
+      </iframe>
     </div>
 
     <!-- Metadata Readout -->
@@ -407,35 +286,27 @@
       <div id="currentTimestamp" class="track-time">00:00 / 00:00</div>
     </div>
 
-    <!-- Progress Scrub Bar -->
-    <div class="live-progress-container" id="progressBarContainer">
+    <!-- Estimated Progress Bar -->
+    <div class="live-progress-container">
       <div id="streamProgressBar" class="live-progress-bar"></div>
     </div>
 
-    <!-- Master Controls Deck Underneath the Screen -->
+    <!-- Control Buttons -->
     <div class="controls">
-      <button class="ctrl-btn" onclick="skipToPreviousTrack()" title="Previous Video" aria-label="Previous Video">
+      <button class="ctrl-btn" onclick="skipToPreviousTrack()" title="Previous Video">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
       </button>
 
-      <button id="masterPlayBtn" class="ctrl-btn btn-play" onclick="togglePlayback()" title="Play / Pause" aria-label="Play or Pause">
-        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <button id="masterPlayBtn" class="ctrl-btn btn-play" onclick="togglePlayback()" title="Play / Pause">
+        <svg id="playIcon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
       </button>
 
-      <button class="ctrl-btn" onclick="skipToNextTrack()" title="Next Video" aria-label="Next Video">
+      <button class="ctrl-btn" onclick="skipToNextTrack()" title="Next Video">
         <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
       </button>
     </div>
 
-    <!-- Master Volume -->
-    <div class="volume-group">
-      <svg style="width:18px;height:18px;fill:var(--text-muted);" viewBox="0 0 24 24">
-        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-      </svg>
-      <input type="range" id="volSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.80" aria-label="Volume Slider" oninput="handleVolumeChange(event)">
-    </div>
-
-    <!-- Recently Aired Shows (Last 3 Played) -->
+    <!-- Recently Aired Shows -->
     <div class="queue-panel">
       <div class="queue-header">
         <h4>Recently Aired (Last 3 Shows)</h4>
@@ -445,24 +316,22 @@
     </div>
   </div>
 
-  <div id="toastNotification" class="toast"></div>
-
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
     const POLL_INTERVAL = 15000;
+    const VIDEO_GAP_DELAY_MS = 2000; // Exact 2-second handover
 
     let isPlaying = false;
     let currentTrackIndex = 0;
-    let currentBlobUrl = null;
-    let isTrackLoading = false;
-    let activeFetchAbortController = null;
-    let userBaseVolume = 0.80;
-    let cachedManifestEtag = null;
-
     let currentQueue = [];
-    let priorityQueue = []; // Immediate queue for videos uploaded mid-stream
+    let priorityQueue = [];
     let recentlyPlayedHistory = [];
     let pollTimerId = null;
+    let videoTimerId = null;
+    let cachedManifestEtag = null;
+
+    let videoDurationSeconds = 0;
+    let videoElapsedSeconds = 0;
 
     let viewerSessionId = localStorage.getItem("PULSE_TV_VIEWER_ID");
     if (!viewerSessionId) {
@@ -470,150 +339,39 @@
       localStorage.setItem("PULSE_TV_VIEWER_ID", viewerSessionId);
     }
 
-    const videoElement = document.getElementById("tvVideo");
+    const frameElement = document.getElementById("tvFrame");
 
     window.addEventListener("DOMContentLoaded", () => {
-      initVideoListeners();
-      initProgressBarSeek();
-      initRemoteDpadKeys();
-
-      // Immediate auto-start on load following audio sequence pattern
       fetchLiveManifest();
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
 
-    function showToast(message) {
-      const toast = document.getElementById("toastNotification");
-      toast.textContent = message;
-      toast.classList.add("visible");
-      setTimeout(() => { toast.classList.remove("visible"); }, 3500);
-    }
-
-    function handleUnmute() {
-      videoElement.muted = false;
-      videoElement.volume = userBaseVolume;
-      document.getElementById("unmutePill").style.display = "none";
-    }
-
-    function initVideoListeners() {
-      // Auto-sequence: advances automatically when current video completes
-      videoElement.addEventListener("ended", handleTrackEnded);
-
-      videoElement.addEventListener("timeupdate", () => {
-        if (!videoElement.duration || !isFinite(videoElement.duration)) return;
-        const progress = (videoElement.currentTime / videoElement.duration) * 100;
-        document.getElementById("streamProgressBar").style.width = progress + "%";
-
-        const curSec = Math.floor(videoElement.currentTime);
-        const durSec = Math.floor(videoElement.duration);
-        document.getElementById("currentTimestamp").textContent =
-          `${formatTime(curSec)} / ${formatTime(durSec)}`;
-      });
-
-      videoElement.addEventListener("error", (e) => {
-        const err = videoElement.error;
-        if (err && err.code === MediaError.MEDIA_ERR_ABORTED) return;
-        console.warn("Direct stream error, attempting proxy fallback...", e);
-        if (currentQueue.length > 0 && isPlaying) {
-          fallbackStreamViaProxy(currentQueue[currentTrackIndex]);
-        }
-      });
-
-      videoElement.addEventListener("playing", () => {
-        isPlaying = true;
-        updatePlayStateUI();
-      });
-
-      videoElement.addEventListener("pause", () => {
-        isPlaying = false;
-        updatePlayStateUI();
-      });
-
-      videoElement.addEventListener("waiting", () => {
-        if (isPlaying) {
-          document.getElementById("currentTitle").textContent = "Buffering broadcast stream...";
-        }
-      });
-    }
-
-    function initProgressBarSeek() {
-      const container = document.getElementById("progressBarContainer");
-      container.addEventListener("click", (e) => {
-        if (!videoElement.duration || !isFinite(videoElement.duration)) return;
-        const rect = container.getBoundingClientRect();
-        const pos = (e.clientX - rect.left) / rect.width;
-        videoElement.currentTime = pos * videoElement.duration;
-      });
-    }
-
-    function initRemoteDpadKeys() {
-      window.addEventListener("keydown", (e) => {
-        if (e.key === "MediaPlayPause" || e.keyCode === 179) {
-          e.preventDefault(); togglePlayback();
-        } else if (e.key === "MediaTrackNext" || e.keyCode === 228) {
-          e.preventDefault(); skipToNextTrack();
-        } else if (e.key === "MediaTrackPrevious" || e.keyCode === 227) {
-          e.preventDefault(); skipToPreviousTrack();
-        }
-      });
-    }
-
-    function syncMediaSession(track) {
-      if ("mediaSession" in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: track.title || track.fileName,
-          artist: "Broadcaster: " + (track.uploaderName || "Anonymous"),
-          album: "Pulse TV // Live Stream",
-          artwork: [
-            { src: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=512&q=80", sizes: "512x512", type: "image/jpeg" }
-          ]
-        });
-
-        navigator.mediaSession.setActionHandler("play", () => togglePlayback());
-        navigator.mediaSession.setActionHandler("pause", () => togglePlayback());
-        navigator.mediaSession.setActionHandler("nexttrack", () => skipToNextTrack());
-        navigator.mediaSession.setActionHandler("previoustrack", () => skipToPreviousTrack());
-      }
-    }
-
     async function fetchLiveManifest() {
       try {
         let endpoint = `${GAS_ENDPOINT_URL}?action=getLiveManifest&viewerId=${encodeURIComponent(viewerSessionId)}`;
-        if (cachedManifestEtag) {
-          endpoint += `&etag=${encodeURIComponent(cachedManifestEtag)}`;
-        }
+        if (cachedManifestEtag) endpoint += `&etag=${encodeURIComponent(cachedManifestEtag)}`;
 
         const res = await fetch(endpoint, { method: "GET", mode: "cors" });
         const json = await res.json();
 
         if (json.success && json.data) {
           if (json.data.activeViewers !== undefined) {
-            document.getElementById("viewerReadout").textContent = `VIEWERS: ${json.data.activeViewers} LIVE`;
+            document.getElementById("listenerReadout").textContent = `VIEWERS: ${json.data.activeViewers} LIVE`;
           }
 
           if (json.data.notModified) return;
           if (json.data.etag) cachedManifestEtag = json.data.etag;
 
-          if (json.data.manifest) {
+          if (json.data.manifest && json.data.manifest.length > 0) {
             reconcileIncomingManifest(json.data.manifest);
           }
         }
       } catch (err) {
-        console.warn("Manifest background polling notice:", err.message);
+        console.warn("Manifest background polling notice:", err);
       }
     }
 
-    /**
-     * Reconciles manifest with newest-first sequencing and mid-stream insertion
-     */
     function reconcileIncomingManifest(incomingTracks) {
-      if (incomingTracks.length === 0) {
-        document.getElementById("currentTitle").textContent = "Station Idle: No active broadcasts found.";
-        document.getElementById("currentContributor").textContent = "Awaiting transmissions";
-        return;
-      }
-
-      // Initial Autoplay Trigger: begins immediately with latest uploaded video (index 0)
       if (currentQueue.length === 0) {
         currentQueue = incomingTracks;
         currentTrackIndex = 0;
@@ -621,13 +379,12 @@
         return;
       }
 
-      // Mid-stream arrival handling: detects newly uploaded content while playing
+      // Check for videos uploaded mid-stream
       const existingIds = new Set(currentQueue.map(t => t.contentId));
       const newlyAddedTracks = incomingTracks.filter(t => !existingIds.has(t.contentId));
 
       if (newlyAddedTracks.length > 0) {
         newlyAddedTracks.forEach(newTrack => priorityQueue.push(newTrack));
-        showToast("New transmission received! Up next immediately.");
       }
 
       const activeContentId = currentQueue[currentTrackIndex]?.contentId;
@@ -639,46 +396,66 @@
       }
     }
 
-    /**
-     * Auto-advances through queue: priority queue first, then sequential latest-to-oldest with continuous loop
-     */
+    function loadAndPlayTrack(track) {
+      if (!track) return;
+      if (videoTimerId) clearInterval(videoTimerId);
+
+      document.getElementById("currentTitle").textContent = track.title || track.fileName;
+      document.getElementById("currentContributor").textContent = `LIVE AIR // @${track.uploaderUsername} (${track.uploaderName})`;
+
+      // Embed player URL that works with Google Drive
+      frameElement.src = `https://drive.google.com/file/d/${encodeURIComponent(track.fileId)}/preview`;
+
+      isPlaying = true;
+      updatePlayStateUI();
+
+      // Duration tracking & automated 2s chain transition
+      videoDurationSeconds = parseInt(track.durationSeconds, 10) || 60;
+      videoElapsedSeconds = 0;
+
+      videoTimerId = setInterval(() => {
+        if (!isPlaying) return;
+        videoElapsedSeconds++;
+
+        const progress = Math.min(100, (videoElapsedSeconds / videoDurationSeconds) * 100);
+        document.getElementById("streamProgressBar").style.width = progress + "%";
+        document.getElementById("currentTimestamp").textContent =
+          `${formatTime(videoElapsedSeconds)} / ${formatTime(videoDurationSeconds)}`;
+
+        if (videoElapsedSeconds >= videoDurationSeconds) {
+          clearInterval(videoTimerId);
+          handleTrackEnded();
+        }
+      }, 1000);
+    }
+
     function handleTrackEnded() {
       const finishedTrack = currentQueue[currentTrackIndex];
-      if (finishedTrack) {
-        recordTrackToRecentlyPlayed(finishedTrack);
-      }
+      if (finishedTrack) recordTrackToRecentlyPlayed(finishedTrack);
 
-      if (priorityQueue.length > 0) {
-        const nextUrgentTrack = priorityQueue.shift();
-        const foundIdx = currentQueue.findIndex(t => t.contentId === nextUrgentTrack.contentId);
-        if (foundIdx !== -1) currentTrackIndex = foundIdx;
-        loadAndPlayTrack(nextUrgentTrack);
-      } else {
-        skipToNextTrack();
-      }
+      setTimeout(() => {
+        if (priorityQueue.length > 0) {
+          const nextUrgent = priorityQueue.shift();
+          const foundIdx = currentQueue.findIndex(t => t.contentId === nextUrgent.contentId);
+          if (foundIdx !== -1) currentTrackIndex = foundIdx;
+          loadAndPlayTrack(nextUrgent);
+        } else {
+          skipToNextTrack();
+        }
+      }, VIDEO_GAP_DELAY_MS);
     }
 
     function skipToNextTrack() {
       if (currentQueue.length === 0) return;
-      const finishedTrack = currentQueue[currentTrackIndex];
-      if (finishedTrack && isPlaying) {
-        recordTrackToRecentlyPlayed(finishedTrack);
-      }
-
       currentTrackIndex++;
-      // Loop back to the latest video (index 0) when reaching the end of queue
-      if (currentTrackIndex >= currentQueue.length) {
-        currentTrackIndex = 0;
-      }
+      if (currentTrackIndex >= currentQueue.length) currentTrackIndex = 0;
       loadAndPlayTrack(currentQueue[currentTrackIndex]);
     }
 
     function skipToPreviousTrack() {
       if (currentQueue.length === 0) return;
       currentTrackIndex--;
-      if (currentTrackIndex < 0) {
-        currentTrackIndex = currentQueue.length - 1; // Loop to oldest
-      }
+      if (currentTrackIndex < 0) currentTrackIndex = currentQueue.length - 1;
       loadAndPlayTrack(currentQueue[currentTrackIndex]);
     }
 
@@ -690,10 +467,7 @@
         completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
 
-      if (recentlyPlayedHistory.length > 3) {
-        recentlyPlayedHistory.pop();
-      }
-
+      if (recentlyPlayedHistory.length > 3) recentlyPlayedHistory.pop();
       renderRecentlyPlayedList();
     }
 
@@ -703,153 +477,30 @@
       document.getElementById("historyCount").textContent = `${recentlyPlayedHistory.length} / 3 Logged`;
 
       if (recentlyPlayedHistory.length === 0) {
-        const empty = document.createElement("li");
-        empty.style.cssText = "font-size:0.8rem;color:var(--text-muted);padding:8px 0;";
-        empty.textContent = "No completed transmissions yet.";
-        list.appendChild(empty);
+        list.innerHTML = `<li style="font-size:0.8rem;color:var(--text-muted);padding:8px 0;">No completed broadcasts yet.</li>`;
         return;
       }
 
       recentlyPlayedHistory.forEach((item) => {
         const li = document.createElement("li");
         li.className = "queue-item";
-
-        const left = document.createElement("div");
-        left.className = "queue-left";
-
-        const tag = document.createElement("span");
-        tag.className = "queue-tag";
-        tag.textContent = "AIRED";
-
-        const meta = document.createElement("div");
-        const title = document.createElement("div");
-        title.style.fontWeight = "700";
-        title.textContent = item.title;
-
-        const sub = document.createElement("div");
-        sub.style.cssText = "font-size:0.75rem;color:var(--text-muted);";
-        sub.textContent = `@${item.uploaderUsername} • ${item.completedAt}`;
-
-        meta.appendChild(title);
-        meta.appendChild(sub);
-        left.appendChild(tag);
-        left.appendChild(meta);
-
-        const dur = document.createElement("div");
-        dur.style.cssText = "font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);";
-        dur.textContent = formatTime(item.durationSeconds);
-
-        li.appendChild(left);
-        li.appendChild(dur);
+        li.innerHTML = `
+          <div class="queue-left">
+            <span class="queue-tag">AIRED</span>
+            <div>
+              <div style="font-weight:700;">${item.title}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);">@${item.uploaderUsername} • ${item.completedAt}</div>
+            </div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);">${formatTime(item.durationSeconds)}</div>
+        `;
         list.appendChild(li);
       });
     }
 
-    /**
-     * Video Stream Loading & Immediate Autoplay Resolution
-     */
-    function loadAndPlayTrack(track) {
-      if (!track) return;
-
-      if (activeFetchAbortController) {
-        activeFetchAbortController.abort();
-        activeFetchAbortController = null;
-      }
-
-      document.getElementById("currentTitle").textContent = track.title || track.fileName;
-      document.getElementById("currentContributor").textContent = `LIVE AIR // @${track.uploaderUsername} (${track.uploaderName})`;
-
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
-        currentBlobUrl = null;
-      }
-
-      videoElement.pause();
-      videoElement.src = track.downloadUrl || `https://drive.google.com/uc?export=download&id=${encodeURIComponent(track.fileId)}`;
-      videoElement.load();
-      videoElement.volume = userBaseVolume;
-
-      const playPromise = videoElement.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          // If browser policy prevents unmuted autoplay, start muted and display unmute pill
-          videoElement.muted = true;
-          videoElement.play().then(() => {
-            document.getElementById("unmutePill").style.display = "inline-flex";
-          }).catch((fallbackErr) => {
-            console.warn("Direct stream rejected, attempting proxy fallback...", fallbackErr);
-            fallbackStreamViaProxy(track);
-          });
-        });
-      }
-
-      syncMediaSession(track);
-    }
-
-    /**
-     * Chunked Base64 Proxy Stream Fallback
-     */
-    async function fallbackStreamViaProxy(track) {
-      if (!track) return;
-      if (activeFetchAbortController) activeFetchAbortController.abort();
-      activeFetchAbortController = new AbortController();
-
-      try {
-        const streamUrl = `${GAS_ENDPOINT_URL}?action=streamVideo&fileId=${encodeURIComponent(track.fileId)}`;
-        const res = await fetch(streamUrl, {
-          method: "GET",
-          mode: "cors",
-          signal: activeFetchAbortController.signal
-        });
-        const json = await res.json();
-
-        if (!json.success || !json.base64) throw new Error(json.error || "Proxy failed.");
-
-        const clean = json.base64.replace(/\s/g, "");
-        const binary = atob(clean);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-          bytes[i] = binary.charCodeAt(i);
-        }
-
-        const blob = new Blob([bytes], { type: json.mimeType || "video/mp4" });
-        if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-        currentBlobUrl = URL.createObjectURL(blob);
-
-        videoElement.pause();
-        videoElement.src = currentBlobUrl;
-        videoElement.load();
-        videoElement.play().catch(() => {});
-      } catch (err) {
-        if (err.name === "AbortError") return;
-        console.warn("Proxy fallback also failed, advancing to next video:", err);
-        setTimeout(handleTrackEnded, 1500);
-      }
-    }
-
     function togglePlayback() {
-      if (currentQueue.length === 0) {
-        showToast("No transmissions found in buffer.");
-        return;
-      }
-
-      if (!videoElement.src || videoElement.src === "" || videoElement.src === window.location.href) {
-        loadAndPlayTrack(currentQueue[currentTrackIndex]);
-        return;
-      }
-
-      if (videoElement.paused) {
-        videoElement.play().catch((err) => {
-          if (err.name !== "AbortError") console.warn("Playback notice:", err);
-        });
-      } else {
-        videoElement.pause();
-      }
-    }
-
-    function handleVolumeChange(e) {
-      userBaseVolume = Math.max(0, Math.min(1, parseFloat(e.target.value)));
-      videoElement.volume = userBaseVolume;
+      isPlaying = !isPlaying;
+      updatePlayStateUI();
     }
 
     function updatePlayStateUI() {
@@ -859,11 +510,11 @@
 
       if (isPlaying) {
         liveDot.classList.add("active");
-        liveStatusText.textContent = "TV ON AIR";
+        liveStatusText.textContent = "LIVE ON AIR";
         playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
       } else {
         liveDot.classList.remove("active");
-        liveStatusText.textContent = "STANDBY";
+        liveStatusText.textContent = "PAUSED";
         playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
       }
     }
