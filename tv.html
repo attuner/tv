@@ -2,62 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
   <title>PULSE TV // LIVE TELEVISION</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Pulse TV Live">
   <meta name="theme-color" content="#07080C">
-  <meta name="mobile-web-app-capable" content="yes">
 
   <style>
     :root {
       --bg-primary: #07080C;
-      --bg-card: rgba(18, 22, 31, 0.88);
-      --border-line: rgba(255, 255, 255, 0.09);
+      --bg-card: rgba(18, 22, 31, 0.92);
       --accent-tv: #FF3366;
       --accent-cyan: #00F0FF;
-      --accent-crimson: #FF3B30;
       --text-main: #F0F6FC;
       --text-muted: #8B949E;
       --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    body {
-      background: var(--bg-primary);
-      background-image:
-        radial-gradient(circle at 50% 0%, rgba(255, 51, 102, 0.16) 0%, transparent 60%),
-        radial-gradient(circle at 10% 90%, rgba(0, 240, 255, 0.08) 0%, transparent 45%);
-      color: var(--text-main);
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background-color: var(--bg-primary);
+      overflow: hidden;
       font-family: var(--font-ui);
-      min-height: 100vh;
-      min-height: 100dvh;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Start TV Modal Gateway */
+    .start-gate {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 40%, #1a0814 0%, #07080c 80%);
+      z-index: 1000;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
-      overflow-x: hidden;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
     }
 
-    .container { width: 100%; max-width: 880px; display: flex; flex-direction: column; align-items: center; }
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
 
+    .brand-mark svg {
+      width: 42px;
+      height: 42px;
+      fill: var(--accent-tv);
+    }
+
+    .brand-mark h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .brand-mark h1 span {
+      color: var(--accent-tv);
+    }
+
+    .start-btn {
+      background: linear-gradient(135deg, var(--accent-tv), #FF6600);
+      color: #FFFFFF;
+      border: none;
+      padding: 20px 48px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 0 35px rgba(255, 51, 102, 0.55);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-transform: uppercase;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 45px rgba(255, 51, 102, 0.85);
+    }
+
+    .start-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Header Bar */
     header {
-      width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 8px 16px;
+      background: rgba(7, 8, 12, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 10;
     }
 
     .live-badge {
-      display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
-      background: rgba(255, 51, 102, 0.15); border: 1px solid var(--accent-tv);
-      border-radius: 999px; font-family: var(--font-mono); font-size: 0.75rem;
-      font-weight: 800; color: var(--accent-tv); letter-spacing: 1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 51, 102, 0.15);
+      border: 1px solid var(--accent-tv);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent-tv);
+      letter-spacing: 1px;
     }
 
-    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-tv); box-shadow: 0 0 8px var(--accent-tv); animation: tvPulse 1.5s infinite; }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-tv);
+      box-shadow: 0 0 8px var(--accent-tv);
+      animation: tvPulse 1.5s infinite;
+    }
 
     @keyframes tvPulse {
       0%, 100% { opacity: 1; }
@@ -65,236 +146,202 @@
     }
 
     .listeners-count {
-      font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-cyan);
-      font-weight: 600; letter-spacing: 0.5px;
-    }
-
-    .unmute-banner {
-      background: linear-gradient(90deg, var(--accent-tv), #FF6600);
-      color: #FFF;
-      font-weight: 700;
+      font-family: var(--font-mono);
       font-size: 0.8rem;
-      padding: 6px 14px;
-      border-radius: 999px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      display: none;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 16px rgba(255, 51, 102, 0.4);
+      color: var(--accent-cyan);
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
-    .tv-bezel {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      border-radius: 16px;
+    /* TV Viewport Area */
+    .tv-viewport-container {
       position: relative;
-      overflow: hidden;
-      border: 3px solid #1c212c;
-      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
-      margin: 8px 0 20px 0;
+      flex: 1;
+      width: 100vw;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .tv-bezel:fullscreen, .tv-bezel:-webkit-full-screen {
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
-      border: none;
-      margin: 0;
+      background: #000000;
+      overflow: hidden;
     }
 
     .tv-video {
+      max-width: 100vw;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      aspect-ratio: auto;
+      object-fit: contain;
+      background: #000000;
+    }
+
+    .tv-iframe {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      background: #000;
+      border: none;
+      background: #000000;
+    }
+
+    /* Transition Countdown Toast */
+    .transition-toast {
       position: absolute;
-      top: 0;
-      left: 0;
-      transition: opacity 0.2s ease-in-out;
-    }
-
-    .tv-video.active-layer {
-      opacity: 1;
-      z-index: 2;
-      pointer-events: auto;
-    }
-
-    .tv-video.buffer-layer {
-      opacity: 0;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .tv-channel-watermark {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 4px 10px;
-      border-radius: 4px;
+      top: 18px;
+      background: rgba(18, 22, 31, 0.9);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      padding: 8px 18px;
+      border-radius: 999px;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      color: #FFF;
-      z-index: 4;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      pointer-events: none;
+      letter-spacing: 0.5px;
+      z-index: 20;
+      display: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
     }
 
-    .meta-panel { text-align: center; margin-bottom: 16px; width: 100%; }
-    .track-title { font-size: clamp(1.2rem, 3.5vw, 1.55rem); font-weight: 800; letter-spacing: 0.5px; margin-bottom: 6px; color: var(--text-main); }
-    .track-contributor { font-size: 0.9rem; color: var(--accent-tv); font-family: var(--font-mono); margin-bottom: 4px; font-weight: 600; }
-    .track-time { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); }
+    /* Bottom Control & Broadcast Metadata Deck */
+    .tv-meta-deck {
+      width: 100%;
+      background: var(--bg-card);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 10;
+    }
 
-    .live-progress-container { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden; margin-bottom: 24px; cursor: pointer; }
-    .live-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.15s linear; }
+    .broadcast-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
-    .controls { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 3vw, 24px); margin-bottom: 24px; }
+    .broadcast-title {
+      font-size: clamp(0.9rem, 3.5vw, 1.15rem);
+      font-weight: 800;
+      color: #FFFFFF;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .broadcast-contributor {
+      font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+      color: var(--accent-tv);
+      font-family: var(--font-mono);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
     .ctrl-btn {
-      background: var(--bg-card); border: 1px solid var(--border-line); color: var(--text-main);
-      width: 56px; height: 56px; min-width: 48px; min-height: 48px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
-    }
-    .ctrl-btn:hover { border-color: var(--accent-tv); transform: scale(1.05); }
-
-    .ctrl-btn.btn-play {
-      width: 76px; height: 76px; background: var(--accent-tv); color: #FFF; border: none;
-      box-shadow: 0 0 24px rgba(255, 51, 102, 0.5);
-    }
-    .ctrl-btn.btn-play:hover { box-shadow: 0 0 34px rgba(255, 51, 102, 0.8); transform: scale(1.06); }
-
-    .ctrl-btn svg { width: 24px; height: 24px; fill: currentColor; }
-    .btn-play svg { width: 32px; height: 32px; }
-
-    button:focus-visible, input:focus-visible {
-      outline: 3px solid var(--accent-tv) !important;
-      outline-offset: 4px !important;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      min-height: 42px;
     }
 
-    .volume-group { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; width: 100%; max-width: 280px; }
-    .volume-slider {
-      flex: 1; height: 6px; background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px; outline: none;
-    }
-    .volume-slider::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
-      background: var(--accent-tv); cursor: pointer; box-shadow: 0 0 8px var(--accent-tv);
+    .ctrl-btn:hover {
+      background: var(--accent-tv);
+      border-color: var(--accent-tv);
+      box-shadow: 0 0 14px rgba(255, 51, 102, 0.4);
     }
 
-    .queue-panel {
-      width: 100%; background: var(--bg-card); backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border-line);
-      border-radius: 16px; padding: clamp(16px, 3vw, 24px); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    .ctrl-btn:active {
+      transform: scale(0.95);
     }
 
-    .queue-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border-line);
+    .ctrl-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
     }
-
-    .queue-header h4 { font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-mono); color: var(--text-muted); }
-    .queue-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
-
-    .queue-item {
-      display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
-      background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-line); border-radius: 8px; font-size: 0.85rem;
-    }
-
-    .queue-left { display: flex; align-items: center; gap: 12px; }
-    .queue-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-weight: 700; background: rgba(255, 255, 255, 0.1); color: var(--text-muted); }
-
-    .toast {
-      position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      background: rgba(22, 27, 34, 0.96); border: 1px solid var(--accent-tv); color: var(--text-main);
-      padding: 12px 24px; border-radius: 8px; font-size: 0.85rem; font-family: var(--font-mono);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); transform: translateY(120px); transition: transform 0.3s ease;
-      z-index: 1000; max-width: 90vw;
-    }
-    .toast.visible { transform: translateY(0); }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <div class="live-badge">
-        <span class="live-dot"></span>
-        <span>TV ON AIR</span>
-      </div>
-      <div class="listeners-count" id="viewerReadout">VIEWERS: 1 LIVE</div>
-    </header>
-
-    <div id="unmuteBanner" class="unmute-banner" onclick="unmuteTV()">
-      <span>🔊 AUDIO MUTED (AUTOPLAY POLICY) - TAP TO UNMUTE</span>
+  <!-- Fullscreen Initial User-Gesture Gate -->
+  <div id="startGate" class="start-gate">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+      <h1>PULSE <span>TV</span></h1>
     </div>
+    <button class="start-btn" onclick="startPulseTV()">📺 START TV</button>
+  </div>
 
-    <!-- DUAL PLAYER CONTAINERS -->
-    <div class="tv-bezel" id="tvBezel">
-      <video id="tvPlayerA" class="tv-video active-layer" playsinline webkit-playsinline preload="auto"></video>
-      <video id="tvPlayerB" class="tv-video buffer-layer" playsinline webkit-playsinline preload="auto"></video>
-      <div class="tv-channel-watermark">PULSE // LIVE</div>
+  <header>
+    <div class="live-badge">
+      <span class="live-dot"></span>
+      <span id="headerStatus">LIVE ON AIR</span>
     </div>
+    <div class="listeners-count" id="viewerReadout">VIEWERS: 1 LIVE</div>
+  </header>
 
-    <div class="meta-panel">
-      <div id="currentTitle" class="track-title">Loading Transmission Stream...</div>
-      <div id="currentContributor" class="track-contributor">Broadcasting Live</div>
-      <div id="currentTimestamp" class="track-time">00:00 / 00:00</div>
+  <!-- Auto Aspect Ratio TV Screen -->
+  <div class="tv-viewport-container" id="tvViewport">
+    <div id="transitionToast" class="transition-toast">NEXT EPISODE IN 2S...</div>
+    <video
+      id="mainPlayer"
+      class="tv-video"
+      controls
+      playsinline
+      webkit-playsinline
+      preload="auto">
+    </video>
+    <iframe id="iframePlayer" class="tv-iframe" style="display:none;" allow="autoplay; fullscreen"></iframe>
+  </div>
+
+  <!-- Bottom Metadata & Navigation Controls -->
+  <div class="tv-meta-deck">
+    <div class="broadcast-info">
+      <div id="broadcastTitle" class="broadcast-title">Connecting Stream...</div>
+      <div id="broadcastContributor" class="broadcast-contributor">Broadcasting Live</div>
     </div>
-
-    <div class="live-progress-container" id="progressBarContainer">
-      <div id="streamProgressBar" class="live-progress-bar"></div>
-    </div>
-
-    <div class="controls">
-      <button class="ctrl-btn" onclick="channelDown()" title="Previous Episode / Channel Down" aria-label="Previous Episode">
+    <div class="deck-controls">
+      <button class="ctrl-btn" onclick="channelDown()" title="Previous Episode">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        <span>PREV</span>
       </button>
-
-      <button id="masterPlayBtn" class="ctrl-btn btn-play" onclick="togglePlayback()" title="Pause / Play" aria-label="Play or Pause">
-        <svg id="playIcon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      </button>
-
-      <button class="ctrl-btn" onclick="channelUp()" title="Next Episode / Channel Up" aria-label="Next Episode">
-        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-      </button>
-
-      <button class="ctrl-btn" onclick="toggleFullscreenAndLandscape()" title="Fullscreen & Rotate Landscape" aria-label="Fullscreen">
+      <button class="ctrl-btn" onclick="toggleFullscreen()" title="Fullscreen / Landscape">
         <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
       </button>
     </div>
-
-    <div class="volume-group">
-      <svg style="width:18px;height:18px;fill:var(--text-muted);" viewBox="0 0 24 24">
-        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-      </svg>
-      <input type="range" id="volSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.80" aria-label="Volume Slider" oninput="handleVolumeChange(event)">
-    </div>
-
-    <div class="queue-panel">
-      <div class="queue-header">
-        <h4>Recently Aired Shows (Last 3 Takes)</h4>
-        <span id="historyCount" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);">0 Records</span>
-      </div>
-      <ul id="recentlyPlayedList" class="queue-list"></ul>
-    </div>
   </div>
-
-  <div id="toastNotification" class="toast"></div>
 
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
     const POLL_INTERVAL = 15000;
+    const VIDEO_GAP_DELAY_MS = 2000; // Strict 2-second handover
 
-    let isPlaying = false;
+    let currentQueue = [];
     let currentTrackIndex = 0;
-    let userBaseVolume = 0.80;
     let cachedManifestEtag = null;
-    let preloadedNextTrackIndex = -1;
+    let pollTimerId = null;
+    let delayTimerId = null;
+    let tvStarted = false;
 
     let viewerSessionId = localStorage.getItem("PULSE_TV_VIEWER_ID");
     if (!viewerSessionId) {
@@ -302,148 +349,68 @@
       localStorage.setItem("PULSE_TV_VIEWER_ID", viewerSessionId);
     }
 
-    let currentQueue = [];
-    let recentlyPlayedHistory = [];
-    let pollTimerId = null;
-
-    let activePlayer = document.getElementById("tvPlayerA");
-    let bufferPlayer = document.getElementById("tvPlayerB");
+    const mainPlayer = document.getElementById("mainPlayer");
+    const iframePlayer = document.getElementById("iframePlayer");
+    const startGate = document.getElementById("startGate");
+    const titleElem = document.getElementById("broadcastTitle");
+    const contributorElem = document.getElementById("broadcastContributor");
+    const transitionToast = document.getElementById("transitionToast");
 
     window.addEventListener("DOMContentLoaded", () => {
-      initPlayerListeners(document.getElementById("tvPlayerA"));
-      initPlayerListeners(document.getElementById("tvPlayerB"));
-      initProgressBarSeek();
-      initRemoteDpadKeys();
-
-      fetchLiveManifest(true);
+      initPlayerEvents();
+      fetchLiveManifest();
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
 
-    function showToast(message) {
-      const toast = document.getElementById("toastNotification");
-      toast.textContent = message;
-      toast.classList.add("visible");
-      setTimeout(() => { toast.classList.remove("visible"); }, 3000);
-    }
+    function startPulseTV() {
+      tvStarted = true;
+      startGate.style.display = "none";
 
-    function initPlayerListeners(player) {
-      player.addEventListener("timeupdate", () => {
-        if (player !== activePlayer || !player.duration || !isFinite(player.duration)) return;
-
-        const progress = (player.currentTime / player.duration) * 100;
-        document.getElementById("streamProgressBar").style.width = progress + "%";
-
-        const curSec = Math.floor(player.currentTime);
-        const durSec = Math.floor(player.duration);
-        document.getElementById("currentTimestamp").textContent =
-          `${formatTime(curSec)} / ${formatTime(durSec)}`;
-
-        const timeLeft = player.duration - player.currentTime;
-        if (timeLeft <= 10 && timeLeft > 0.5) {
-          triggerNextVideoPrebuffer();
-        }
-      });
-
-      player.addEventListener("ended", () => {
-        if (player === activePlayer) {
-          handleSeamlessVideoEnd();
-        }
-      });
-
-      player.addEventListener("error", () => {
-        if (player === activePlayer) {
-          const track = currentQueue[currentTrackIndex];
-          if (track && player.src !== track.downloadUrl) {
-            player.src = track.downloadUrl;
-            player.play().catch(() => handleSeamlessVideoEnd());
-          } else {
-            handleSeamlessVideoEnd();
-          }
-        }
-      });
-
-      player.addEventListener("playing", () => {
-        if (player === activePlayer) {
-          isPlaying = true;
-          updatePlayStateUI();
-        }
-      });
-
-      player.addEventListener("pause", () => {
-        if (player === activePlayer) {
-          isPlaying = false;
-          updatePlayStateUI();
-        }
-      });
-    }
-
-    function initProgressBarSeek() {
-      const container = document.getElementById("progressBarContainer");
-      container.addEventListener("click", (e) => {
-        if (!activePlayer.duration || !isFinite(activePlayer.duration)) return;
-        const rect = container.getBoundingClientRect();
-        const pos = (e.clientX - rect.left) / rect.width;
-        activePlayer.currentTime = pos * activePlayer.duration;
-      });
-    }
-
-    function initRemoteDpadKeys() {
-      window.addEventListener("keydown", (e) => {
-        if (e.key === "MediaPlayPause" || e.keyCode === 179) {
-          e.preventDefault(); togglePlayback();
-        } else if (e.key === "MediaTrackNext" || e.keyCode === 228) {
-          e.preventDefault(); channelUp();
-        } else if (e.key === "MediaTrackPrevious" || e.keyCode === 227) {
-          e.preventDefault(); channelDown();
-        } else if (e.key === "f" || e.key === "F") {
-          toggleFullscreenAndLandscape();
-        }
-      });
-    }
-
-    async function toggleFullscreenAndLandscape() {
-      const bezel = document.getElementById("tvBezel");
-
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        try {
-          if (bezel.requestFullscreen) {
-            await bezel.requestFullscreen();
-          } else if (bezel.webkitRequestFullscreen) {
-            await bezel.webkitRequestFullscreen();
-          }
-
-          if (screen.orientation && screen.orientation.lock) {
-            try {
-              await screen.orientation.lock("landscape");
-            } catch (lockErr) {}
-          }
-        } catch (err) {
-          showToast("Fullscreen denied: " + err.message);
-        }
-      } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          await document.webkitExitFullscreen();
-        }
-        if (screen.orientation && screen.orientation.unlock) {
-          screen.orientation.unlock();
-        }
+      if (currentQueue.length > 0) {
+        playVideo(currentQueue[currentTrackIndex]);
       }
     }
 
-    function unmuteTV() {
-      activePlayer.muted = false;
-      bufferPlayer.muted = false;
-      document.getElementById("unmuteBanner").style.display = "none";
+    function initPlayerEvents() {
+      mainPlayer.addEventListener("ended", () => {
+        scheduleNextVideo();
+      });
+
+      mainPlayer.addEventListener("error", (e) => {
+        console.warn("Direct HTML5 stream rejected by Drive. Engaging preview fallback...", e);
+        fallbackToEmbedPlayer(currentQueue[currentTrackIndex]);
+      });
+
+      mainPlayer.addEventListener("playing", () => {
+        document.getElementById("headerStatus").textContent = "LIVE ON AIR";
+      });
+
+      mainPlayer.addEventListener("waiting", () => {
+        document.getElementById("headerStatus").textContent = "BUFFERING...";
+      });
     }
 
-    async function fetchLiveManifest(isInitial = false) {
+    function fallbackToEmbedPlayer(track) {
+      if (!track || !track.fileId) return;
+      mainPlayer.style.display = "none";
+      iframePlayer.style.display = "block";
+      iframePlayer.src = `https://drive.google.com/file/d/${encodeURIComponent(track.fileId)}/preview`;
+    }
+
+    function scheduleNextVideo() {
+      if (delayTimerId) clearTimeout(delayTimerId);
+      transitionToast.style.display = "block";
+
+      delayTimerId = setTimeout(() => {
+        transitionToast.style.display = "none";
+        channelUp();
+      }, VIDEO_GAP_DELAY_MS);
+    }
+
+    async function fetchLiveManifest() {
       try {
         let endpoint = `${GAS_ENDPOINT_URL}?action=getLiveManifest&viewerId=${encodeURIComponent(viewerSessionId)}`;
-        if (cachedManifestEtag) {
-          endpoint += `&etag=${encodeURIComponent(cachedManifestEtag)}`;
-        }
+        if (cachedManifestEtag) endpoint += `&etag=${encodeURIComponent(cachedManifestEtag)}`;
 
         const res = await fetch(endpoint, { method: "GET", mode: "cors" });
         const json = await res.json();
@@ -460,195 +427,76 @@
             const isFirstLoad = currentQueue.length === 0;
             currentQueue = json.data.manifest;
 
-            if (isFirstLoad) {
+            if (isFirstLoad && tvStarted) {
               currentTrackIndex = 0;
-              playCurrentVideoDirect(true);
+              playVideo(currentQueue[0]);
             }
           }
         }
       } catch (err) {
-        console.warn("Manifest update error:", err.message);
+        console.warn("Manifest update error:", err);
       }
     }
 
-    function resolveVideoUrl(track) {
-      if (!track) return "";
-      if (track.downloadUrl) return track.downloadUrl;
-      return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(track.fileId)}`;
-    }
+    function playVideo(track) {
+      if (!track) return;
+      if (delayTimerId) clearTimeout(delayTimerId);
+      transitionToast.style.display = "none";
 
-    function playCurrentVideoDirect(isInitialLoad = false) {
-      if (currentQueue.length === 0) return;
+      titleElem.textContent = track.title || track.fileName || "Live Transmission Episode";
+      contributorElem.textContent = `@${track.uploaderUsername || "channel"} (${track.uploaderName || "Creator"})`;
 
-      const track = currentQueue[currentTrackIndex];
-      preloadedNextTrackIndex = -1;
+      // Reset players to native HTML5 mode
+      iframePlayer.style.display = "none";
+      iframePlayer.src = "";
+      mainPlayer.style.display = "block";
 
-      document.getElementById("currentTitle").textContent = track.title || track.fileName;
-      document.getElementById("currentContributor").textContent = `LIVE AIR // @${track.uploaderUsername} (${track.uploaderName})`;
+      mainPlayer.pause();
+      mainPlayer.src = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(track.fileId)}`;
+      mainPlayer.load();
 
-      activePlayer.src = resolveVideoUrl(track);
-      activePlayer.volume = userBaseVolume;
-
-      const promise = activePlayer.play();
-      if (promise !== undefined) {
-        promise.catch((err) => {
-          activePlayer.muted = true;
-          activePlayer.play().then(() => {
-            document.getElementById("unmuteBanner").style.display = "inline-flex";
-          }).catch(() => {
-            if (track.streamUrl && activePlayer.src !== track.streamUrl) {
-              activePlayer.src = track.streamUrl;
-              activePlayer.play().catch(() => {});
-            }
-          });
+      const playPromise = mainPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("Direct stream failed, using embed fallback:", err);
+          fallbackToEmbedPlayer(track);
         });
       }
-    }
-
-    function triggerNextVideoPrebuffer() {
-      if (currentQueue.length <= 1) return;
-
-      const nextIndex = (currentTrackIndex + 1) % currentQueue.length;
-      if (preloadedNextTrackIndex === nextIndex) return;
-
-      preloadedNextTrackIndex = nextIndex;
-      const nextTrack = currentQueue[nextIndex];
-
-      bufferPlayer.src = resolveVideoUrl(nextTrack);
-      bufferPlayer.load();
-    }
-
-    function handleSeamlessVideoEnd() {
-      if (currentQueue.length === 0) return;
-
-      const finished = currentQueue[currentTrackIndex];
-      if (finished) recordTrackToRecentlyPlayed(finished);
-
-      currentTrackIndex = (currentTrackIndex + 1) % currentQueue.length;
-      const nextTrack = currentQueue[currentTrackIndex];
-
-      const oldActive = activePlayer;
-      activePlayer = bufferPlayer;
-      bufferPlayer = oldActive;
-
-      activePlayer.className = "tv-video active-layer";
-      bufferPlayer.className = "tv-video buffer-layer";
-
-      document.getElementById("currentTitle").textContent = nextTrack.title || nextTrack.fileName;
-      document.getElementById("currentContributor").textContent = `LIVE AIR // @${nextTrack.uploaderUsername} (${nextTrack.uploaderName})`;
-
-      activePlayer.volume = userBaseVolume;
-      activePlayer.muted = bufferPlayer.muted;
-
-      const promise = activePlayer.play();
-      if (promise !== undefined) {
-        promise.catch(() => {
-          activePlayer.src = resolveVideoUrl(nextTrack);
-          activePlayer.play().catch(() => {});
-        });
-      }
-
-      preloadedNextTrackIndex = -1;
     }
 
     function channelUp() {
-      handleSeamlessVideoEnd();
+      if (currentQueue.length === 0) return;
+      currentTrackIndex = (currentTrackIndex + 1) % currentQueue.length;
+      playVideo(currentQueue[currentTrackIndex]);
     }
 
     function channelDown() {
       if (currentQueue.length === 0) return;
       currentTrackIndex = (currentTrackIndex - 1 + currentQueue.length) % currentQueue.length;
-      playCurrentVideoDirect();
+      playVideo(currentQueue[currentTrackIndex]);
     }
 
-    function recordTrackToRecentlyPlayed(track) {
-      recentlyPlayedHistory.unshift({
-        title: track.title || track.fileName,
-        uploaderUsername: track.uploaderUsername,
-        durationSeconds: track.durationSeconds || 0,
-        completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-
-      if (recentlyPlayedHistory.length > 3) recentlyPlayedHistory.pop();
-      renderRecentlyPlayedList();
-    }
-
-    function renderRecentlyPlayedList() {
-      const list = document.getElementById("recentlyPlayedList");
-      list.innerHTML = "";
-      document.getElementById("historyCount").textContent = `${recentlyPlayedHistory.length} / 3 Logged`;
-
-      if (recentlyPlayedHistory.length === 0) {
-        const empty = document.createElement("li");
-        empty.style.cssText = "font-size:0.8rem;color:var(--text-muted);padding:8px 0;";
-        empty.textContent = "No broadcast episodes logged yet.";
-        list.appendChild(empty);
-        return;
-      }
-
-      recentlyPlayedHistory.forEach((item) => {
-        const li = document.createElement("li");
-        li.className = "queue-item";
-
-        const left = document.createElement("div");
-        left.className = "queue-left";
-
-        const tag = document.createElement("span");
-        tag.className = "queue-tag";
-        tag.textContent = "AIRED";
-
-        const meta = document.createElement("div");
-        const title = document.createElement("div");
-        title.style.fontWeight = "700";
-        title.textContent = item.title;
-
-        const sub = document.createElement("div");
-        sub.style.cssText = "font-size:0.75rem;color:var(--text-muted);";
-        sub.textContent = `@${item.uploaderUsername} • ${item.completedAt}`;
-
-        meta.appendChild(title);
-        meta.appendChild(sub);
-        left.appendChild(tag);
-        left.appendChild(meta);
-
-        const dur = document.createElement("div");
-        dur.style.cssText = "font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);";
-        dur.textContent = formatTime(item.durationSeconds);
-
-        li.appendChild(left);
-        li.appendChild(dur);
-        list.appendChild(li);
-      });
-    }
-
-    function togglePlayback() {
-      if (activePlayer.paused) {
-        activePlayer.play().catch(() => {});
+    async function toggleFullscreen() {
+      const container = document.getElementById("tvViewport");
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          await container.webkitRequestFullscreen();
+        }
+        if (screen.orientation && screen.orientation.lock) {
+          try { await screen.orientation.lock("landscape"); } catch (e) {}
+        }
       } else {
-        activePlayer.pause();
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        }
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
       }
-    }
-
-    function handleVolumeChange(e) {
-      userBaseVolume = Math.max(0, Math.min(1, parseFloat(e.target.value)));
-      activePlayer.volume = userBaseVolume;
-      bufferPlayer.volume = userBaseVolume;
-    }
-
-    function updatePlayStateUI() {
-      const playIcon = document.getElementById("playIcon");
-      if (isPlaying) {
-        playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-      } else {
-        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-      }
-    }
-
-    function formatTime(seconds) {
-      const s = parseInt(seconds, 10) || 0;
-      const mins = Math.floor(s / 60);
-      const secs = s % 60;
-      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
   </script>
 </body>

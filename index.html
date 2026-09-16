@@ -2,20 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
   <title>PULSE TV // BROADCAST STUDIO</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Pulse TV Studio">
   <meta name="theme-color" content="#07080C">
-  <meta name="mobile-web-app-capable" content="yes">
 
   <style>
     :root {
       --bg-primary: #07080C;
       --bg-surface: #0E1117;
-      --panel-bg: rgba(20, 24, 33, 0.88);
+      --panel-bg: rgba(20, 24, 33, 0.92);
       --panel-border: rgba(255, 255, 255, 0.09);
       --accent-tv: #FF3366;
       --accent-cyan: #00F0FF;
@@ -26,7 +24,12 @@
       --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
       background-color: var(--bg-primary);
@@ -44,21 +47,42 @@
       overflow-x: hidden;
     }
 
-    .container { width: 100%; max-width: 960px; }
+    .container {
+      width: 100%;
+      max-width: 860px;
+    }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 20px;
-      margin-bottom: 20px;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
       border-bottom: 1px solid var(--panel-border);
     }
 
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-logo { width: 34px; height: 34px; fill: var(--accent-tv); }
-    .brand-title { font-size: 1.15rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
-    .brand-title span { color: var(--accent-tv); }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      fill: var(--accent-tv);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .brand-title span {
+      color: var(--accent-tv);
+    }
 
     .status-badge {
       display: inline-flex;
@@ -74,8 +98,11 @@
     }
 
     .beacon {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #34C759; box-shadow: 0 0 8px #34C759;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34C759;
+      box-shadow: 0 0 8px #34C759;
     }
 
     .card {
@@ -84,35 +111,66 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--panel-border);
       border-radius: 16px;
-      padding: clamp(20px, 4vw, 32px);
-      margin-bottom: 24px;
+      padding: clamp(18px, 4vw, 32px);
+      margin-bottom: 20px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     }
 
     .tabs {
-      display: flex; background: rgba(0, 0, 0, 0.4);
-      padding: 4px; border-radius: 10px; margin-bottom: 24px;
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 20px;
       border: 1px solid var(--panel-border);
     }
 
     .tab-btn {
-      flex: 1; background: transparent; border: none;
-      color: var(--text-muted); padding: 12px 16px;
-      font-size: 0.85rem; font-weight: 600; cursor: pointer;
-      border-radius: 8px; min-height: 48px; transition: all 0.2s ease;
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      min-height: 44px;
+      transition: all 0.2s ease;
+      text-align: center;
     }
 
-    .tab-btn.active { background: var(--accent-glow); color: var(--accent-tv); font-weight: 700; }
+    .tab-btn.active {
+      background: var(--accent-glow);
+      color: var(--accent-tv);
+      font-weight: 700;
+    }
 
-    .form-group { margin-bottom: 20px; }
-    label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; }
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
 
     input[type="text"], input[type="password"] {
-      width: 100%; background: rgba(0, 0, 0, 0.5);
-      border: 1px solid var(--panel-border); border-radius: 8px;
-      padding: 14px 16px; color: var(--text-primary);
-      font-family: inherit; font-size: 0.95rem; min-height: 48px;
-      outline: none; transition: border-color 0.2s;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.95rem;
+      min-height: 48px;
+      outline: none;
+      transition: border-color 0.2s;
     }
 
     input:focus {
@@ -121,38 +179,84 @@
     }
 
     .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: 10px; width: 100%; padding: 14px 20px; border-radius: 8px;
-      font-size: 0.9rem; font-weight: 700; letter-spacing: 0.5px;
-      cursor: pointer; transition: all 0.2s ease; border: none;
-      text-transform: uppercase; min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      text-transform: uppercase;
+      min-height: 48px;
     }
 
-    .btn-primary { background: linear-gradient(135deg, var(--accent-tv), #FF6600); color: #FFF; }
-    .btn-primary:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 0 16px rgba(255, 51, 102, 0.4); }
-    .btn-danger { background: #FF3B30; color: #FFF; }
-    .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid var(--panel-border); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-tv), #FF6600);
+      color: #FFF;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.1);
+      box-shadow: 0 0 16px rgba(255, 51, 102, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--panel-border);
+    }
+
+    .btn-danger {
+      background: #FF3B30;
+      color: #FFF;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
 
     .user-banner {
-      display: flex; justify-content: space-between; align-items: center;
-      padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--panel-border);
     }
 
-    .user-info h3 { font-size: 1.1rem; color: var(--text-primary); }
-    .user-info p { font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .user-info h3 {
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .user-info p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
 
     .logout-btn {
-      padding: 8px 16px; background: transparent; border: 1px solid var(--panel-border);
-      border-radius: 6px; color: var(--text-muted); font-size: 0.75rem; min-height: 44px; cursor: pointer;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      min-height: 40px;
+      cursor: pointer;
     }
-    .logout-btn:hover { color: var(--accent-tv); border-color: var(--accent-tv); }
 
-    .capacity-banner {
-      background: rgba(255, 51, 102, 0.06); border: 1px solid rgba(255, 51, 102, 0.2);
-      border-radius: 8px; padding: 12px 16px; margin-bottom: 24px;
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.8rem; font-family: var(--font-mono);
+    .logout-btn:hover {
+      color: var(--accent-tv);
+      border-color: var(--accent-tv);
     }
 
     .studio-monitor-wrap {
@@ -164,7 +268,7 @@
       position: relative;
       border: 1px solid var(--panel-border);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .studio-video {
@@ -177,7 +281,7 @@
       position: absolute;
       top: 14px;
       left: 14px;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       padding: 6px 12px;
       border-radius: 6px;
       display: flex;
@@ -189,8 +293,12 @@
     }
 
     .rec-dot {
-      width: 10px; height: 10px; border-radius: 50%; background: #FF3B30;
-      box-shadow: 0 0 8px #FF3B30; animation: livePulse 1.5s infinite;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #FF3B30;
+      box-shadow: 0 0 8px #FF3B30;
+      animation: livePulse 1.5s infinite;
     }
 
     @keyframes livePulse {
@@ -202,32 +310,91 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .dropzone {
-      border: 2px dashed var(--panel-border); border-radius: 12px;
-      padding: clamp(24px, 5vw, 40px); text-align: center; cursor: pointer;
-      transition: all 0.2s; background: rgba(0, 0, 0, 0.2);
+      border: 2px dashed var(--panel-border);
+      border-radius: 12px;
+      padding: clamp(24px, 5vw, 40px);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(0, 0, 0, 0.2);
     }
-    .dropzone:hover, .dropzone.dragover { border-color: var(--accent-tv); background: var(--accent-glow); }
 
-    .progress-box { margin-top: 20px; display: none; }
-    .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 8px; font-weight: 700; color: var(--accent-tv); }
-    .progress-bar-bg { height: 12px; background: rgba(0, 0, 0, 0.6); border-radius: 6px; overflow: hidden; border: 1px solid var(--panel-border); }
-    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan)); transition: width 0.15s linear; }
+    .dropzone:hover {
+      border-color: var(--accent-tv);
+      background: var(--accent-glow);
+    }
 
-    .preview-player { width: 100%; margin: 20px 0; display: none; }
+    .progress-box {
+      margin-top: 20px;
+      display: none;
+    }
 
-    .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 16px; display: none; }
-    .alert-error { background: rgba(255, 59, 48, 0.15); border: 1px solid #FF3B30; color: #FFB4AB; }
-    .alert-success { background: rgba(52, 199, 89, 0.15); border: 1px solid #34C759; color: #B4F8C8; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: var(--accent-tv);
+    }
+
+    .progress-bar-bg {
+      height: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--panel-border);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-tv), var(--accent-cyan));
+      transition: width 0.15s linear;
+    }
+
+    .preview-player {
+      width: 100%;
+      margin: 16px 0;
+      display: none;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert-error {
+      background: rgba(255, 59, 48, 0.15);
+      border: 1px solid #FF3B30;
+      color: #FFB4AB;
+    }
+
+    .alert-success {
+      background: rgba(52, 199, 89, 0.15);
+      border: 1px solid #34C759;
+      color: #B4F8C8;
+    }
 
     .link-tv {
-      display: inline-flex; align-items: center; gap: 6px; color: var(--accent-tv);
-      text-decoration: none; font-size: 0.9rem; min-height: 48px; padding: 8px 16px; margin-top: 16px; font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent-tv);
+      text-decoration: none;
+      font-size: 0.9rem;
+      min-height: 48px;
+      padding: 8px 16px;
+      font-weight: 700;
     }
-    .link-tv:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -235,9 +402,7 @@
   <div class="container">
     <header>
       <div class="brand">
-        <svg class="brand-logo" viewBox="0 0 24 24">
-          <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
-        </svg>
+        <svg class="brand-logo" viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
         <div class="brand-title">PULSE TV // <span>STUDIO</span></div>
       </div>
       <div class="status-badge">
@@ -248,12 +413,12 @@
 
     <div id="alertBox" class="alert"></div>
 
-    <!-- AUTHENTICATION & PASSWORD RESET CARD -->
+    <!-- AUTHENTICATION CARD -->
     <div id="authPanel" class="card">
       <div class="tabs" role="tablist">
-        <button id="tabLoginBtn" class="tab-btn active" role="tab" onclick="switchAuthTab('login')">SIGN IN</button>
-        <button id="tabRegisterBtn" class="tab-btn" role="tab" onclick="switchAuthTab('register')">CREATE ACCOUNT</button>
-        <button id="tabResetBtn" class="tab-btn" role="tab" onclick="switchAuthTab('reset')">RESET PASSWORD</button>
+        <button id="tabLoginBtn" class="tab-btn active" onclick="switchAuthTab('login')">SIGN IN</button>
+        <button id="tabRegisterBtn" class="tab-btn" onclick="switchAuthTab('register')">CREATE ACCOUNT</button>
+        <button id="tabResetBtn" class="tab-btn" onclick="switchAuthTab('reset')">RESET PASSWORD</button>
       </div>
 
       <form id="authForm" onsubmit="handleAuthSubmit(event)">
@@ -264,7 +429,7 @@
 
         <div class="form-group">
           <label for="username">Channel Handle / Username</label>
-          <input type="text" id="username" required autocomplete="username" placeholder="lowercase letters, numbers, underscores" maxlength="20">
+          <input type="text" id="username" required autocomplete="username" placeholder="letters, numbers, underscores" maxlength="20">
         </div>
 
         <div id="passwordGroup" class="form-group">
@@ -283,7 +448,7 @@
       </form>
     </div>
 
-    <!-- STUDIO OPERATOR CONSOLE -->
+    <!-- STUDIO CONSOLE -->
     <div id="studioPanel" class="card" style="display: none;">
       <div class="user-banner">
         <div class="user-info">
@@ -293,20 +458,15 @@
         <button class="logout-btn" onclick="logout()">LOG OUT</button>
       </div>
 
-      <div class="capacity-banner">
-        <span>TRANSMISSION BUFFER: 50 SHOWS</span>
-        <span style="color:var(--accent-tv);">CAPACITY: UP TO 256 MB</span>
-      </div>
-
       <div class="tabs" role="tablist">
-        <button id="tabCameraBtn" class="tab-btn active" role="tab" onclick="switchStudioTab('camera')">LIVE CAMERA RECORDER</button>
-        <button id="tabFileBtn" class="tab-btn" role="tab" onclick="switchStudioTab('file')">MASTER VIDEO INGEST (256 MB)</button>
+        <button id="tabCameraBtn" class="tab-btn active" onclick="switchStudioTab('camera')">LIVE CAMERA</button>
+        <button id="tabFileBtn" class="tab-btn" onclick="switchStudioTab('file')">FILE INGEST (256 MB)</button>
       </div>
 
       <div id="cameraConsole">
         <div class="source-selection-grid">
-          <button id="frontCamBtn" class="btn btn-secondary" onclick="initializeCameraCapture('user')">🤳 FRONT CAMERA</button>
-          <button id="backCamBtn" class="btn btn-secondary" onclick="initializeCameraCapture('environment')">📷 BACK CAMERA</button>
+          <button id="frontCamBtn" class="btn btn-secondary" onclick="initializeCameraCapture('user')">🤳 FRONT CAM</button>
+          <button id="backCamBtn" class="btn btn-secondary" onclick="initializeCameraCapture('environment')">📷 BACK CAM</button>
         </div>
 
         <div class="studio-monitor-wrap">
@@ -318,23 +478,21 @@
         </div>
 
         <div class="source-selection-grid">
-          <button id="startRecBtn" class="btn btn-primary" onclick="startVideoRecording()" disabled>START RECORDING SHOW</button>
-          <button id="stopRecBtn" class="btn btn-danger" onclick="stopVideoRecording()" disabled>FINISH TAKE</button>
+          <button id="startRecBtn" class="btn btn-primary" onclick="startVideoRecording()" disabled>RECORD</button>
+          <button id="stopRecBtn" class="btn btn-danger" onclick="stopVideoRecording()" disabled>FINISH</button>
         </div>
       </div>
 
       <div id="fileConsole" style="display: none;">
-        <div class="dropzone" id="dropArea" tabindex="0" onclick="document.getElementById('videoFileInput').click()">
-          <svg style="width:48px;height:48px;fill:var(--text-muted);margin-bottom:12px;" viewBox="0 0 24 24">
-            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
-          </svg>
-          <p style="font-weight:700;margin-bottom:4px;">Drag & Drop Video Episode</p>
-          <p style="font-size:0.75rem;color:var(--text-muted);">Accepts MP4, WEBM, MOV, AVI (Max 256 MB)</p>
+        <div class="dropzone" id="dropArea" onclick="document.getElementById('videoFileInput').click()">
+          <svg style="width:44px;height:44px;fill:var(--text-muted);margin-bottom:10px;" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          <p style="font-weight:700;">Drag & Drop Video File</p>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">MP4, WEBM, MOV, AVI (Max 256 MB)</p>
           <input type="file" id="videoFileInput" accept="video/*" style="display:none" onchange="handleVideoFileSelect(event)">
         </div>
       </div>
 
-      <div id="submissionContainer" style="margin-top: 24px;">
+      <div id="submissionContainer" style="margin-top: 16px;">
         <div id="previewBox" class="preview-player">
           <label>Review Broadcast Take</label>
           <div class="studio-monitor-wrap" style="aspect-ratio: 16/9; margin-bottom: 12px;">
@@ -342,13 +500,13 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-top: 16px;">
-          <label for="trackTitle">Episode / Broadcast Title</label>
-          <input type="text" id="trackTitle" placeholder="e.g. Episode 04: The Open Web Architecture" maxlength="80">
+        <div class="form-group" style="margin-top: 14px;">
+          <label for="trackTitle">Episode Title</label>
+          <input type="text" id="trackTitle" placeholder="e.g. Architecture of the Open Web" maxlength="80">
         </div>
 
         <button id="publishBtn" class="btn btn-primary" onclick="initiateChunkedUploadPipeline()" disabled>
-          <span>AIR ON LIVE TV (RELIABLE CHUNKED STREAM)</span>
+          <span>AIR ON LIVE TV BUFFER (256 MB)</span>
         </button>
 
         <div id="uploadProgress" class="progress-box">
@@ -365,8 +523,8 @@
 
     <div style="text-align: center;">
       <a href="tv.html" class="link-tv" target="_blank">
-        <span>Go to Live TV Station</span>
-        <svg style="width:18px;height:18px;fill:currentColor" viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+        <span>Go to Live TV Broadcast</span>
+        <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
       </a>
     </div>
   </div>
@@ -374,7 +532,7 @@
   <script>
     const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyI6s-P5dkMz0iJU8qBf4MEEX_eF1JEOfE44XcmaXzC_IYhVjDjPhxJ6E1ujy6jzxlukg/exec";
     const MAX_FILE_SIZE = 256 * 1024 * 1024;
-    const CHUNK_BYTE_SIZE = 3 * 1024 * 1024; // 3MB raw binary slice per chunk
+    const CHUNK_BYTE_SIZE = 3 * 1024 * 1024; // 3MB chunk slice
 
     let currentAuthMode = "login";
     let currentUserSession = null;
@@ -427,13 +585,13 @@
 
       if (mode === "reset") {
         document.getElementById("passLabel").textContent = "New Password";
-        document.getElementById("authSubmitBtn").querySelector("span").textContent = "CHANGE & RESET PASSWORD";
+        document.getElementById("authSubmitBtn").querySelector("span").textContent = "CHANGE PASSWORD";
       } else if (mode === "register") {
         document.getElementById("passLabel").textContent = "Password";
-        document.getElementById("authSubmitBtn").querySelector("span").textContent = "REGISTER BROADCASTER";
+        document.getElementById("authSubmitBtn").querySelector("span").textContent = "REGISTER";
       } else {
         document.getElementById("passLabel").textContent = "Password";
-        document.getElementById("authSubmitBtn").querySelector("span").textContent = "SIGN IN TO TV STUDIO";
+        document.getElementById("authSubmitBtn").querySelector("span").textContent = "SIGN IN";
       }
     }
 
