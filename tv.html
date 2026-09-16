@@ -17,7 +17,7 @@
       --accent-cyan: #00F0FF;
       --text-main: #F0F6FC;
       --text-muted: #8B949E;
-      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
     }
 
@@ -41,7 +41,7 @@
       justify-content: space-between;
     }
 
-    /* Start TV Modal Gateway */
+    /* Start TV Modal Gateway (Unlocks browser permissions for seamless autoplay) */
     .start-gate {
       position: fixed;
       inset: 0;
@@ -63,8 +63,8 @@
     }
 
     .brand-mark svg {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       fill: var(--accent-tv);
     }
 
@@ -186,7 +186,7 @@
     .transition-toast {
       position: absolute;
       top: 18px;
-      background: rgba(18, 22, 31, 0.9);
+      background: rgba(18, 22, 31, 0.95);
       border: 1px solid var(--accent-cyan);
       color: var(--accent-cyan);
       padding: 8px 18px;
@@ -198,6 +198,22 @@
       z-index: 20;
       display: none;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Notification Pill for Incoming Mid-Stream Broadcast */
+    .urgent-toast {
+      position: absolute;
+      bottom: 20px;
+      background: rgba(255, 51, 102, 0.95);
+      color: #FFFFFF;
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      z-index: 20;
+      display: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
     }
 
     /* Bottom Control & Broadcast Metadata Deck */
@@ -222,7 +238,7 @@
     }
 
     .broadcast-title {
-      font-size: clamp(0.9rem, 3.5vw, 1.15rem);
+      font-size: clamp(0.95rem, 3.5vw, 1.2rem);
       font-weight: 800;
       color: #FFFFFF;
       white-space: nowrap;
@@ -251,7 +267,7 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #FFFFFF;
-      padding: 10px 16px;
+      padding: 10px 18px;
       border-radius: 999px;
       font-size: 0.8rem;
       font-weight: 700;
@@ -283,7 +299,7 @@
 </head>
 <body>
 
-  <!-- Fullscreen Initial User-Gesture Gate -->
+  <!-- 1-Click Gesture Gate to Guarantee Unmuted Autoplay Across All Devices -->
   <div id="startGate" class="start-gate">
     <div class="brand-mark">
       <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
@@ -300,9 +316,11 @@
     <div class="listeners-count" id="viewerReadout">VIEWERS: 1 LIVE</div>
   </header>
 
-  <!-- Auto Aspect Ratio TV Screen -->
+  <!-- TV Screen Area with Clean Aspect Ratio -->
   <div class="tv-viewport-container" id="tvViewport">
     <div id="transitionToast" class="transition-toast">NEXT EPISODE IN 2S...</div>
+    <div id="urgentToast" class="urgent-toast">⚡ NEW BROADCAST RECEIVED &bull; UP NEXT</div>
+
     <video
       id="mainPlayer"
       class="tv-video"
@@ -314,18 +332,18 @@
     <iframe id="iframePlayer" class="tv-iframe" style="display:none;" allow="autoplay; fullscreen"></iframe>
   </div>
 
-  <!-- Bottom Metadata & Navigation Controls -->
+  <!-- Bottom Information Bar & Controls -->
   <div class="tv-meta-deck">
     <div class="broadcast-info">
-      <div id="broadcastTitle" class="broadcast-title">Connecting Stream...</div>
-      <div id="broadcastContributor" class="broadcast-contributor">Broadcasting Live</div>
+      <div id="broadcastTitle" class="broadcast-title">Connecting to Broadcast Feed...</div>
+      <div id="broadcastContributor" class="broadcast-contributor">Channel Standby</div>
     </div>
     <div class="deck-controls">
-      <button class="ctrl-btn" onclick="channelDown()" title="Previous Episode">
+      <button class="ctrl-btn" onclick="playPreviousVideo()" title="Previous Episode">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
         <span>PREV</span>
       </button>
-      <button class="ctrl-btn" onclick="toggleFullscreen()" title="Fullscreen / Landscape">
+      <button class="ctrl-btn" onclick="toggleFullscreen()" title="Fullscreen">
         <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
       </button>
     </div>
@@ -336,11 +354,13 @@
     const POLL_INTERVAL = 15000;
     const VIDEO_GAP_DELAY_MS = 2000; // Strict 2-second handover
 
+    // Playback State
     let currentQueue = [];
+    let priorityQueue = []; // Holds newly broadcasted videos detected mid-stream
     let currentTrackIndex = 0;
     let cachedManifestEtag = null;
     let pollTimerId = null;
-    let delayTimerId = null;
+    let transitionTimerId = null;
     let tvStarted = false;
 
     let viewerSessionId = localStorage.getItem("PULSE_TV_VIEWER_ID");
@@ -355,6 +375,7 @@
     const titleElem = document.getElementById("broadcastTitle");
     const contributorElem = document.getElementById("broadcastContributor");
     const transitionToast = document.getElementById("transitionToast");
+    const urgentToast = document.getElementById("urgentToast");
 
     window.addEventListener("DOMContentLoaded", () => {
       initPlayerEvents();
@@ -362,22 +383,26 @@
       pollTimerId = setInterval(fetchLiveManifest, POLL_INTERVAL);
     });
 
+    // 1-Click Launch: Clears browser autoplay gesture lockouts for all subsequent videos
     function startPulseTV() {
       tvStarted = true;
       startGate.style.display = "none";
 
       if (currentQueue.length > 0) {
-        playVideo(currentQueue[currentTrackIndex]);
+        currentTrackIndex = 0; // Rule 1: Always start with the newest video
+        playVideo(currentQueue[0]);
       }
     }
 
     function initPlayerEvents() {
+      // Upon completion: trigger the 2-second automated transition
       mainPlayer.addEventListener("ended", () => {
         scheduleNextVideo();
       });
 
+      // Stream fallback handling
       mainPlayer.addEventListener("error", (e) => {
-        console.warn("Direct HTML5 stream rejected by Drive. Engaging preview fallback...", e);
+        console.warn("Direct HTML5 stream rejected, switching to Drive embed player...", e);
         fallbackToEmbedPlayer(currentQueue[currentTrackIndex]);
       });
 
@@ -397,16 +422,59 @@
       iframePlayer.src = `https://drive.google.com/file/d/${encodeURIComponent(track.fileId)}/preview`;
     }
 
+    // 2-Second Transition Scheduler (Requires NO user clicks)
     function scheduleNextVideo() {
-      if (delayTimerId) clearTimeout(delayTimerId);
+      if (transitionTimerId) clearTimeout(transitionTimerId);
       transitionToast.style.display = "block";
 
-      delayTimerId = setTimeout(() => {
+      transitionTimerId = setTimeout(() => {
         transitionToast.style.display = "none";
-        channelUp();
+        advanceToNextVideo();
       }, VIDEO_GAP_DELAY_MS);
     }
 
+    // Next Track Engine: Evaluates Urgent Priority Queue, Descending Order, and Loop
+    function advanceToNextVideo() {
+      if (currentQueue.length === 0) return;
+
+      // Rule: If a newly broadcasted video arrived mid-stream, play it immediately next
+      if (priorityQueue.length > 0) {
+        const urgentTrack = priorityQueue.shift();
+        urgentToast.style.display = "none";
+
+        // Locate its index in the synchronized queue
+        const foundIndex = currentQueue.findIndex(t => t.contentId === urgentTrack.contentId);
+        if (foundIndex !== -1) {
+          currentTrackIndex = foundIndex;
+        }
+        playVideo(urgentTrack);
+        return;
+      }
+
+      // Rule: Latest to oldest progression (0 -> 1 -> 2 -> ... -> N)
+      currentTrackIndex++;
+
+      // Rule: Once finished playing the oldest, loop back to the latest (index 0)
+      if (currentTrackIndex >= currentQueue.length) {
+        currentTrackIndex = 0;
+      }
+
+      playVideo(currentQueue[currentTrackIndex]);
+    }
+
+    function playPreviousVideo() {
+      if (currentQueue.length === 0) return;
+      if (transitionTimerId) clearTimeout(transitionTimerId);
+      transitionToast.style.display = "none";
+
+      currentTrackIndex--;
+      if (currentTrackIndex < 0) {
+        currentTrackIndex = currentQueue.length - 1; // Wrap to oldest
+      }
+      playVideo(currentQueue[currentTrackIndex]);
+    }
+
+    // Manifest Polling & Mid-Stream Insertion Engine
     async function fetchLiveManifest() {
       try {
         let endpoint = `${GAS_ENDPOINT_URL}?action=getLiveManifest&viewerId=${encodeURIComponent(viewerSessionId)}`;
@@ -424,29 +492,58 @@
           if (json.data.etag) cachedManifestEtag = json.data.etag;
 
           if (json.data.manifest && json.data.manifest.length > 0) {
-            const isFirstLoad = currentQueue.length === 0;
-            currentQueue = json.data.manifest;
+            const incomingManifest = json.data.manifest;
 
-            if (isFirstLoad && tvStarted) {
-              currentTrackIndex = 0;
-              playVideo(currentQueue[0]);
+            // Initial population
+            if (currentQueue.length === 0) {
+              currentQueue = incomingManifest;
+              if (tvStarted) {
+                currentTrackIndex = 0;
+                playVideo(currentQueue[0]);
+              }
+              return;
+            }
+
+            // Mid-stream detection: check for new videos not in currentQueue
+            const existingIds = new Set(currentQueue.map(v => v.contentId));
+            const newBroadcasts = incomingManifest.filter(v => !existingIds.has(v.contentId));
+
+            if (newBroadcasts.length > 0) {
+              // Add newly uploaded videos to the priority queue so they play immediately after current video
+              newBroadcasts.forEach(newVideo => {
+                priorityQueue.push(newVideo);
+              });
+              urgentToast.style.display = "block";
+            }
+
+            // Keep the active track index aligned with the updated manifest
+            const activeContentId = currentQueue[currentTrackIndex]?.contentId;
+            currentQueue = incomingManifest;
+
+            if (activeContentId) {
+              const remappedIndex = currentQueue.findIndex(v => v.contentId === activeContentId);
+              if (remappedIndex !== -1) {
+                currentTrackIndex = remappedIndex;
+              }
             }
           }
         }
       } catch (err) {
-        console.warn("Manifest update error:", err);
+        console.warn("Manifest background polling error:", err);
       }
     }
 
+    // Playback Invocator with Automatic Autoplay
     function playVideo(track) {
       if (!track) return;
-      if (delayTimerId) clearTimeout(delayTimerId);
+      if (transitionTimerId) clearTimeout(transitionTimerId);
       transitionToast.style.display = "none";
 
+      // Render Broadcast Metadata
       titleElem.textContent = track.title || track.fileName || "Live Transmission Episode";
-      contributorElem.textContent = `@${track.uploaderUsername || "channel"} (${track.uploaderName || "Creator"})`;
+      contributorElem.textContent = `@${track.uploaderUsername || "channel"} (${track.uploaderName || "Verified Broadcaster"})`;
 
-      // Reset players to native HTML5 mode
+      // Reset players
       iframePlayer.style.display = "none";
       iframePlayer.src = "";
       mainPlayer.style.display = "block";
@@ -455,25 +552,14 @@
       mainPlayer.src = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(track.fileId)}`;
       mainPlayer.load();
 
+      // Autoplay without requiring any button clicks
       const playPromise = mainPlayer.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
-          console.warn("Direct stream failed, using embed fallback:", err);
+          console.warn("Direct play rejected by browser, engaging iframe fallback:", err);
           fallbackToEmbedPlayer(track);
         });
       }
-    }
-
-    function channelUp() {
-      if (currentQueue.length === 0) return;
-      currentTrackIndex = (currentTrackIndex + 1) % currentQueue.length;
-      playVideo(currentQueue[currentTrackIndex]);
-    }
-
-    function channelDown() {
-      if (currentQueue.length === 0) return;
-      currentTrackIndex = (currentTrackIndex - 1 + currentQueue.length) % currentQueue.length;
-      playVideo(currentQueue[currentTrackIndex]);
     }
 
     async function toggleFullscreen() {
